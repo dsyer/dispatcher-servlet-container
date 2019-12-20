@@ -15,8 +15,9 @@
 	<name>Parent Demo</name>
 
 	<modules>
-		<module>sample</module>
 		<module>dispatcher</module>
+		<module>sample</module>
+		<module>jafu</module>
 	</modules>
 
 	<properties>
