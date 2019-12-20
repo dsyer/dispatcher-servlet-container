@@ -10,8 +10,8 @@ import org.springframework.boot.autoconfigure.context.MessageSourceInitializer;
 import org.springframework.boot.autoconfigure.http.HttpProperties;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletWebServerInitializer;
 import org.springframework.boot.autoconfigure.web.servlet.ResourceConverterInitializer;
-import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerInitializer;
 import org.springframework.boot.autoconfigure.web.servlet.StringConverterInitializer;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
@@ -40,12 +40,14 @@ public class JafuApplication {
 		this.initializer = context -> {
 			new MessageSourceInitializer().initialize(context);
 			context.registerBean(CommandLineRunner.class, () -> args -> System.out.println("jafu running!"));
-			context.registerBean(BeanDefinitionReaderUtils.uniqueBeanName(RouterFunctionDsl.class.getName(), context), RouterFunction.class, () ->
-				RouterFunctions.route().GET("/", request -> ServerResponse.ok().body("Hello")).build());
+			context.registerBean(BeanDefinitionReaderUtils.uniqueBeanName(RouterFunctionDsl.class.getName(), context),
+					RouterFunction.class,
+					() -> RouterFunctions.route().GET("/", request -> ServerResponse.ok().body("Hello")).build());
 			serverProperties.setPort(8080);
 			new StringConverterInitializer().initialize(context);
 			new ResourceConverterInitializer().initialize(context);
-			new ServletWebServerInitializer(serverProperties, httpProperties, webMvcProperties, resourceProperties).initialize(context);
+			new DispatcherServletWebServerInitializer(serverProperties, httpProperties, webMvcProperties,
+					resourceProperties).initialize(context);
 		};
 	}
 
@@ -86,5 +88,5 @@ public class JafuApplication {
 		new JafuApplication().run(args);
 		Thread.currentThread().join(); // To be able to measure memory consumption
 	}
-	
+
 }

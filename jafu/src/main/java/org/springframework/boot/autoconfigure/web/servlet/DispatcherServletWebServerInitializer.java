@@ -54,7 +54,7 @@ import org.springframework.web.servlet.view.ContentNegotiatingViewResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.util.UrlPathHelper;
 
-public class ServletWebServerInitializer implements ApplicationContextInitializer<GenericApplicationContext> {
+public class DispatcherServletWebServerInitializer implements ApplicationContextInitializer<GenericApplicationContext> {
 
 	private final ServerProperties serverProperties;
 
@@ -64,7 +64,7 @@ public class ServletWebServerInitializer implements ApplicationContextInitialize
 
 	private final ResourceProperties resourceProperties;
 
-	public ServletWebServerInitializer(ServerProperties serverProperties, HttpProperties httpProperties,
+	public DispatcherServletWebServerInitializer(ServerProperties serverProperties, HttpProperties httpProperties,
 			WebMvcProperties webMvcProperties, ResourceProperties resourceProperties) {
 		this.serverProperties = serverProperties;
 		this.httpProperties = httpProperties;
@@ -83,7 +83,7 @@ public class ServletWebServerInitializer implements ApplicationContextInitialize
 		context.registerBean(ServletWebServerFactoryCustomizer.class,
 				() -> new ServletWebServerFactoryCustomizer(serverProperties));
 		// context.registerBean(FilterRegistrationBean.class,
-		// servletWebServerFactoryConfiguration::forwardedHeaderFilter);
+		// () -> new ServletWebServerFactoryAutoConfiguration().forwardedHeaderFilter());
 
 		DispatcherServletAutoConfiguration.DispatcherServletConfiguration dispatcherServletConfiguration = new DispatcherServletAutoConfiguration.DispatcherServletConfiguration();
 		context.registerBean(DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME,
