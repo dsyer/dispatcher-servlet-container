@@ -33,9 +33,13 @@ native-image \
   --no-fallback \
   -H:+TraceClassInitialization \
   -H:Name=$ARTIFACT \
+  -H:+PrintMethodHistogram \
+  -H:+PrintAnalysisCallTree \
+  -H:+PrintImageObjectTree \
   -H:+ReportExceptionStackTraces \
   --allow-incomplete-classpath \
   --report-unsupported-elements-at-runtime \
+  --initialize-at-build-time=org.springframework.core.OrderComparator,org.springframework.web.servlet.config.annotation.InterceptorRegistry \
   -DremoveUnusedAutoconfig=true \
   -cp $CP $MAINCLASS >> output.txt
 
