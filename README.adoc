@@ -1,0 +1,1 @@
+A simple experimental Servlet container. Able to run a basic `@RestController` app with Spring Boot. No guarantees beyond that.
