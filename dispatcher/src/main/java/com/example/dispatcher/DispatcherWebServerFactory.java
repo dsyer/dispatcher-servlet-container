@@ -41,7 +41,7 @@ import org.springframework.boot.web.servlet.server.Session;
  * @author Dave Syer
  *
  */
-class DispatcherWebServerFactory implements ConfigurableServletWebServerFactory {
+public class DispatcherWebServerFactory implements ConfigurableServletWebServerFactory {
 
 	private ServerProperties server;
 
