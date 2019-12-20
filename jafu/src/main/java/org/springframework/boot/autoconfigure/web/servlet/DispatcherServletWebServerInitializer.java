@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguratio
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration.ResourceHandlerRegistrationCustomizer;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter;
 import org.springframework.boot.web.server.WebServerFactoryCustomizerBeanPostProcessor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.filter.OrderedHiddenHttpMethodFilter;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
@@ -82,8 +83,8 @@ public class DispatcherServletWebServerInitializer implements ApplicationContext
 		context.registerBean(DispatcherWebServerFactory.class, () -> new DispatcherWebServerFactory(serverProperties));
 		context.registerBean(ServletWebServerFactoryCustomizer.class,
 				() -> new ServletWebServerFactoryCustomizer(serverProperties));
-		// context.registerBean(FilterRegistrationBean.class,
-		// () -> new ServletWebServerFactoryAutoConfiguration().forwardedHeaderFilter());
+		context.registerBean(FilterRegistrationBean.class,
+				() -> new ServletWebServerFactoryAutoConfiguration().forwardedHeaderFilter());
 
 		DispatcherServletAutoConfiguration.DispatcherServletConfiguration dispatcherServletConfiguration = new DispatcherServletAutoConfiguration.DispatcherServletConfiguration();
 		context.registerBean(DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME,
