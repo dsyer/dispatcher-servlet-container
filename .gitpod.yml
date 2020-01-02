@@ -1,3 +1,5 @@
+tasks:
+  - init: ./mvnw clean install
 vscode:
   extensions:
     - vscjava.vscode-java-pack@0.8.1:LRImBn//d5JhH4PUEI1BaQ==
