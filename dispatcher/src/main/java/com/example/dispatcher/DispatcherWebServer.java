@@ -74,7 +74,7 @@ class DispatcherWebServer implements WebServer {
 			server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			throw new WebServerException("Cannot create server", e);
 		}
 		server.createContext("/", new MyHandler(servletContext));
 		server.setExecutor(null); // creates a default executor
