@@ -16,18 +16,17 @@
 package com.example.dispatcher;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 
 import javax.servlet.ServletException;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
-import reactor.core.publisher.Mono;
-import reactor.netty.DisposableServer;
-import reactor.netty.http.server.HttpServer;
-import reactor.netty.http.server.HttpServerRequest;
-
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -40,9 +39,9 @@ class DispatcherWebServer implements WebServer {
 
 	static Log logger = LogFactory.getLog(DispatcherWebServer.class);
 
-	private DisposableServer disposable;
-
 	private DispatcherServletContext servletContext = new DispatcherServletContext();
+
+	private HttpServer server = null;
 
 	private int port;
 
@@ -60,60 +59,57 @@ class DispatcherWebServer implements WebServer {
 
 	@Override
 	public void stop() throws WebServerException {
-		if (disposable != null) {
-			disposable.dispose();
-		}
+		server.stop(1);
 	}
 
 	@Override
 	public void start() throws WebServerException {
 		Thread thread = new Thread(() -> {
-			HttpServer created = HttpServer.create();
-			if (port > 0) {
-				created = created.port(port);
+			try {
+				server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
 			}
-			disposable = created.route(routes -> routes.route(request -> true,
-					(request, response) -> response.sendByteArray(publish(request)))).bindNow();
-			logger.info("Running on port: " + disposable.port());
-			logger.info("Class count: " + ManagementFactory.getClassLoadingMXBean().getTotalLoadedClassCount());
-			disposable.onDispose().block();
-			disposable = null;
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			server.createContext("/", new MyHandler(servletContext));
+			server.setExecutor(null); // creates a default executor
+			server.start();
 		});
 		thread.setName("server");
 		thread.setDaemon(false);
 		thread.start();
 	}
 
-	private Publisher<byte[]> publish(HttpServerRequest nettyRequest) {
-		DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
-		request.setMethod(nettyRequest.method().name());
-		DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
-		try {
-			servletContext.filterChain().doFilter(request, response);
+	static class MyHandler implements HttpHandler {
+
+		private final DispatcherServletContext servletContext;
+
+		public MyHandler(DispatcherServletContext servletContext) {
+			this.servletContext = servletContext;
 		}
-		catch (IOException | ServletException e) {
-			throw new IllegalStateException("Failed", e);
+
+		@Override
+		public void handle(HttpExchange t) throws IOException {
+			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
+            request.setMethod(t.getRequestMethod());
+            request.setRequestURI(t.getRequestURI().toString());
+			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
+			try {
+				servletContext.filterChain().doFilter(request, response);
+			}
+			catch (IOException | ServletException e) {
+				throw new IllegalStateException("Failed", e);
+			}
+
+			t.sendResponseHeaders(200, response.getContentLength());
+			OutputStream os = t.getResponseBody();
+			os.write(response.getContentAsByteArray());
+			os.close();
 		}
-		return Mono.just(response.getContentAsByteArray());
 	}
 
 	@Override
 	public int getPort() {
-		if (port > 0) {
-			return port;
-		}
-		int count = 0;
-		while (disposable == null && count++ < 10) {
-			try {
-				Thread.sleep(20L);
-			}
-			catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		}
-		if (disposable != null) {
-			return disposable.port();
-		}
 		return port;
 	}
 

@@ -26,8 +26,14 @@ class DispatcherApplicationTests {
 	}
 
 	@Test
-	void contextLoads() {
+	void home() {
 		String value = client.get().uri("http://localhost:" + port + "/").retrieve().bodyToMono(String.class).block();
+		assertThat(value).isEqualTo("Home");
+	}
+
+	@Test
+	void hello() {
+		String value = client.get().uri("http://localhost:" + port + "/hello").retrieve().bodyToMono(String.class).block();
 		assertThat(value).isEqualTo("Hello");
 	}
 

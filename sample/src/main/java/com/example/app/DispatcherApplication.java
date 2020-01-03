@@ -15,6 +15,11 @@ public class DispatcherApplication {
 
 	@GetMapping("/")
 	public String home() {
+		return "Home";
+	}
+
+	@GetMapping("/hello")
+	public String hello() {
 		return "Hello";
 	}
 
