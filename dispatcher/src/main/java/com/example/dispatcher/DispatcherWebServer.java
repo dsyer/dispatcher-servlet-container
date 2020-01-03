@@ -24,12 +24,13 @@ import javax.servlet.ServletException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.util.SocketUtils;
 
 /**
  * @author Dave Syer
@@ -46,6 +47,9 @@ class DispatcherWebServer implements WebServer {
 	private int port;
 
 	public DispatcherWebServer(int port, ServletContextInitializer[] initializers) {
+		if (port == 0) {
+			port = SocketUtils.findAvailableTcpPort();
+		}
 		this.port = port;
 		try {
 			for (ServletContextInitializer initializer : initializers) {
@@ -91,8 +95,8 @@ class DispatcherWebServer implements WebServer {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
-            request.setMethod(t.getRequestMethod());
-            request.setRequestURI(t.getRequestURI().toString());
+			request.setMethod(t.getRequestMethod());
+			request.setRequestURI(t.getRequestURI().toString());
 			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
 			try {
 				servletContext.filterChain().doFilter(request, response);
@@ -106,6 +110,7 @@ class DispatcherWebServer implements WebServer {
 			os.write(response.getContentAsByteArray());
 			os.close();
 		}
+
 	}
 
 	@Override
