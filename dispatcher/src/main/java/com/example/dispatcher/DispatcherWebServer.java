@@ -31,6 +31,7 @@ import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.util.SocketUtils;
+import org.springframework.util.StreamUtils;
 
 /**
  * @author Dave Syer
@@ -96,7 +97,8 @@ class DispatcherWebServer implements WebServer {
 		public void handle(HttpExchange t) throws IOException {
 			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
 			request.setMethod(t.getRequestMethod());
-			request.setRequestURI(t.getRequestURI().toString());
+            request.setRequestURI(t.getRequestURI().toString());
+            request.setContent(StreamUtils.copyToByteArray(t.getRequestBody()));
 			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
 			try {
 				servletContext.filterChain().doFilter(request, response);

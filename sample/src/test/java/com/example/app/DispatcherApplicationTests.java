@@ -32,6 +32,12 @@ class DispatcherApplicationTests {
 	}
 
 	@Test
+	void post() {
+		String value = client.post().uri("http://localhost:" + port + "/").bodyValue("World").retrieve().bodyToMono(String.class).block();
+		assertThat(value).isEqualTo("Hello World");
+	}
+
+	@Test
 	void hello() {
 		String value = client.get().uri("http://localhost:" + port + "/hello").retrieve().bodyToMono(String.class).block();
 		assertThat(value).isEqualTo("Hello");
