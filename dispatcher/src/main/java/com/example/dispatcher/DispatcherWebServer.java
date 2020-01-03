@@ -37,6 +37,7 @@ import org.springframework.util.StreamUtils;
  * @author Dave Syer
  *
  */
+@SuppressWarnings("restriction")
 class DispatcherWebServer implements WebServer {
 
 	static Log logger = LogFactory.getLog(DispatcherWebServer.class);
@@ -103,7 +104,7 @@ class DispatcherWebServer implements WebServer {
 				throw new IllegalStateException("Failed", e);
 			}
 
-			t.sendResponseHeaders(200, response.getContentLength());
+			t.sendResponseHeaders(response.getStatus(), response.getContentLength());
 			OutputStream os = t.getResponseBody();
 			os.write(response.getContentAsByteArray());
 			os.close();
