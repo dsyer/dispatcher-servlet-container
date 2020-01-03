@@ -69,20 +69,16 @@ class DispatcherWebServer implements WebServer {
 
 	@Override
 	public void start() throws WebServerException {
-		Thread thread = new Thread(() -> {
-			try {
-				server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-			server.createContext("/", new MyHandler(servletContext));
-			server.setExecutor(null); // creates a default executor
-			server.start();
-		});
-		thread.setName("server");
-		thread.setDaemon(false);
-		thread.start();
+		try {
+			server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		server.createContext("/", new MyHandler(servletContext));
+		server.setExecutor(null); // creates a default executor
+		server.start();
+		logger.info("Server started on port: " + port);
 	}
 
 	static class MyHandler implements HttpHandler {
@@ -97,8 +93,8 @@ class DispatcherWebServer implements WebServer {
 		public void handle(HttpExchange t) throws IOException {
 			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
 			request.setMethod(t.getRequestMethod());
-            request.setRequestURI(t.getRequestURI().toString());
-            request.setContent(StreamUtils.copyToByteArray(t.getRequestBody()));
+			request.setRequestURI(t.getRequestURI().toString());
+			request.setContent(StreamUtils.copyToByteArray(t.getRequestBody()));
 			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
 			try {
 				servletContext.filterChain().doFilter(request, response);
