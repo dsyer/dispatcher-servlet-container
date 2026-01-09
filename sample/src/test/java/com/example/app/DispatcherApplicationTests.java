@@ -19,6 +19,10 @@ class DispatcherApplicationTests {
 	@LocalServerPort
 	private int port;
 
+	public static void main(String[] args) {
+		DispatcherApplication.main(args);
+	}
+
 	@Autowired
 	DispatcherApplicationTests(WebClient.Builder builder) {
 		this.client = builder.build();

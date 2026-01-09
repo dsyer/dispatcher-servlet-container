@@ -47,9 +47,6 @@ class DispatcherWebServer implements WebServer {
 	private int port;
 
 	public DispatcherWebServer(int port, ServletContextInitializer[] initializers) {
-		if (port == 0) {
-			port = SocketUtils.findAvailableTcpPort();
-		}
 		this.port = port;
 		try {
 			for (ServletContextInitializer initializer : initializers) {
@@ -69,15 +66,16 @@ class DispatcherWebServer implements WebServer {
 	@Override
 	public void start() throws WebServerException {
 		try {
-			server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+			InetSocketAddress address = new InetSocketAddress("0.0.0.0", this.port);
+			server = HttpServer.create(address, 0);
+			server.createContext("/", new MyHandler(servletContext));
+			server.setExecutor(null); // creates a default executor
+			server.start();
+			logger.info("Server started on port: " + server.getAddress().getPort());
 		}
 		catch (IOException e) {
 			throw new WebServerException("Cannot create server", e);
 		}
-		server.createContext("/", new MyHandler(servletContext));
-		server.setExecutor(null); // creates a default executor
-		server.start();
-		logger.info("Server started on port: " + port);
 	}
 
 	static class MyHandler implements HttpHandler {
@@ -112,7 +110,7 @@ class DispatcherWebServer implements WebServer {
 
 	@Override
 	public int getPort() {
-		return port;
+		return server.getAddress().getPort();
 	}
 
 }
