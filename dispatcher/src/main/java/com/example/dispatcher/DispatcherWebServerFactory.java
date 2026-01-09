@@ -24,18 +24,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.boot.web.error.ErrorPage;
 import org.springframework.boot.web.server.Compression;
-import org.springframework.boot.web.server.ErrorPage;
 import org.springframework.boot.web.server.Http2;
 import org.springframework.boot.web.server.MimeMappings;
 import org.springframework.boot.web.server.Ssl;
-import org.springframework.boot.web.server.SslStoreProvider;
 import org.springframework.boot.web.server.WebServer;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
+import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
+import org.springframework.boot.web.server.servlet.Jsp;
+import org.springframework.boot.web.server.servlet.ServletWebServerSettings;
+import org.springframework.boot.web.server.servlet.Session;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.Jsp;
-import org.springframework.boot.web.servlet.server.Session;
 
 /**
  * @author Dave Syer
@@ -47,8 +48,15 @@ public class DispatcherWebServerFactory implements ConfigurableServletWebServerF
 
 	private List<ServletContextInitializer> initializers = new ArrayList<>();
 
+	private final ServletWebServerSettings settings = new ServletWebServerSettings();
+
 	public DispatcherWebServerFactory(ServerProperties server) {
 		this.server = server;
+	}
+
+	@Override
+	public ServletWebServerSettings getSettings() {
+		return this.settings;
 	}
 
 	@Override
@@ -68,7 +76,7 @@ public class DispatcherWebServerFactory implements ConfigurableServletWebServerF
 	}
 
 	@Override
-	public void setSslStoreProvider(SslStoreProvider sslStoreProvider) {
+	public void setSslBundles(SslBundles sslStoreProvider) {
 	}
 
 	@Override

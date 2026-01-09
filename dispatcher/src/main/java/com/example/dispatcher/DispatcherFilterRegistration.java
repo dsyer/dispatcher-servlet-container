@@ -20,15 +20,15 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
 
 /**
  * @author Dave Syer
  *
  */
-public class DispatcherFilterRegistration implements FilterRegistration, FilterRegistration.Dynamic {
+public class DispatcherFilterRegistration implements FilterRegistration.Dynamic {
 
 	private String name;
 

@@ -28,26 +28,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.ServletRegistration.Dynamic;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.ClassUtils;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
 
 /**
  * @author Dave Syer
@@ -159,34 +158,8 @@ public class DispatcherServletContext implements ServletContext {
 	}
 
 	@Override
-	public Servlet getServlet(String name) throws ServletException {
-		return this.servlet.getServlet();
-	}
-
-	@Override
-	public Enumeration<Servlet> getServlets() {
-		if (this.servlet == null) {
-			return Collections.emptyEnumeration();
-		}
-		return Collections.enumeration(Collections.singleton(this.servlet.getServlet()));
-	}
-
-	@Override
-	public Enumeration<String> getServletNames() {
-		if (this.servlet == null) {
-			return Collections.emptyEnumeration();
-		}
-		return Collections.enumeration(Collections.singleton(this.servlet.getName()));
-	}
-
-	@Override
 	public void log(String msg) {
 		logger.info(msg);
-	}
-
-	@Override
-	public void log(Exception exception, String msg) {
-		log(msg, exception);
 	}
 
 	@Override
@@ -290,12 +263,12 @@ public class DispatcherServletContext implements ServletContext {
 	}
 
 	@Override
-	public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) {
+	public jakarta.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) {
 		return addFilter(filterName, (Filter) BeanUtils.instantiateClass(ClassUtils.resolveClassName(className, null)));
 	}
 
 	@Override
-	public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
+	public jakarta.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
 		if (this.filters.containsKey(filterName)) {
 			return null;
 		}
@@ -304,13 +277,13 @@ public class DispatcherServletContext implements ServletContext {
 	}
 
 	@Override
-	public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
+	public jakarta.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
 		return addFilter(filterName, BeanUtils.instantiateClass(filterClass));
 	}
 
 	@Override
 	public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
-		javax.servlet.FilterRegistration.Dynamic added = addFilter(clazz.getName(), clazz);
+		jakarta.servlet.FilterRegistration.Dynamic added = addFilter(clazz.getName(), clazz);
 		if (added != null) {
 			@SuppressWarnings("unchecked")
 			T result = (T) this.filters.get(clazz.getName()).getFilter();

@@ -43,43 +43,47 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpUpgradeHandler;
-import javax.servlet.http.Part;
-
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpUpgradeHandler;
+import jakarta.servlet.http.Part;
+
 /**
- * Mock implementation of the {@link javax.servlet.http.HttpServletRequest} interface.
+ * Dispatcher implementation of the {@link jakarta.servlet.http.HttpServletRequest}
+ * interface.
  *
  * <p>
- * The default, preferred {@link Locale} for the <em>server</em> mocked by this request is
- * {@link Locale#ENGLISH}. This value can be changed via {@link #addPreferredLocale} or
+ * The default, preferred {@link Locale} for the <em>server</em> Dispatchered by this
+ * request is
+ * {@link Locale#ENGLISH}. This value can be changed via
+ * {@link #addPreferredLocale} or
  * {@link #setPreferredLocales}.
  *
  * <p>
- * As of Spring Framework 5.0, this set of mocks is designed on a Servlet 4.0 baseline.
+ * As of Spring Framework 5.0, this set of Dispatchers is designed on a Servlet 4.0
+ * baseline.
  *
  * @author Juergen Hoeller
  * @author Rod Johnson
@@ -101,14 +105,16 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
 	private static final ServletInputStream EMPTY_SERVLET_INPUT_STREAM = new DelegatingServletInputStream(
-			StreamUtils.emptyInput());
+			InputStream.nullInputStream());
 
 	private static final BufferedReader EMPTY_BUFFERED_READER = new BufferedReader(new StringReader(""));
 
 	/**
 	 * Date formats as specified in the HTTP RFC.
-	 * @see <a href="https://tools.ietf.org/html/rfc7231#section-7.1.1.1">Section 7.1.1.1
-	 * of RFC 7231</a>
+	 * 
+	 * @see <a href="https://tools.ietf.org/html/rfc7231#section-7.1.1.1">Section
+	 *      7.1.1.1
+	 *      of RFC 7231</a>
 	 */
 	private static final String[] DATE_FORMATS = new String[] { "EEE, dd MMM yyyy HH:mm:ss zzz",
 			"EEE, dd-MMM-yy HH:mm:ss zzz", "EEE MMM dd HH:mm:ss yyyy" };
@@ -119,12 +125,14 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 
 	/**
 	 * The default protocol: 'HTTP/1.1'.
+	 * 
 	 * @since 4.3.7
 	 */
 	public static final String DEFAULT_PROTOCOL = "HTTP/1.1";
 
 	/**
 	 * The default scheme: 'http'.
+	 * 
 	 * @since 4.3.7
 	 */
 	public static final String DEFAULT_SCHEME = HTTP;
@@ -274,51 +282,57 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Create a new {@code MockHttpServletRequest} with a default
-	 * {@link MockServletContext}.
-	 * @see #MockHttpServletRequest(ServletContext, String, String)
+	 * Create a new {@code DispatcherHttpServletRequest} with a default
+	 * {@link DispatcherServletContext}.
+	 * 
+	 * @see #DispatcherHttpServletRequest(ServletContext, String, String)
 	 */
 	public DispatcherHttpServletRequest() {
 		this(null, "", "");
 	}
 
 	/**
-	 * Create a new {@code MockHttpServletRequest} with a default
-	 * {@link MockServletContext}.
-	 * @param method the request method (may be {@code null})
+	 * Create a new {@code DispatcherHttpServletRequest} with a default
+	 * {@link DispatcherServletContext}.
+	 * 
+	 * @param method     the request method (may be {@code null})
 	 * @param requestURI the request URI (may be {@code null})
 	 * @see #setMethod
 	 * @see #setRequestURI
-	 * @see #MockHttpServletRequest(ServletContext, String, String)
+	 * @see #DispatcherHttpServletRequest(ServletContext, String, String)
 	 */
 	public DispatcherHttpServletRequest(@Nullable String method, @Nullable String requestURI) {
 		this(null, method, requestURI);
 	}
 
 	/**
-	 * Create a new {@code MockHttpServletRequest} with the supplied
+	 * Create a new {@code DispatcherHttpServletRequest} with the supplied
 	 * {@link ServletContext}.
+	 * 
 	 * @param servletContext the ServletContext that the request runs in (may be
-	 * {@code null} to use a default {@link MockServletContext})
-	 * @see #MockHttpServletRequest(ServletContext, String, String)
+	 *                       {@code null} to use a default
+	 *                       {@link DispatcherServletContext})
+	 * @see #DispatcherHttpServletRequest(ServletContext, String, String)
 	 */
 	public DispatcherHttpServletRequest(@Nullable ServletContext servletContext) {
 		this(servletContext, "", "");
 	}
 
 	/**
-	 * Create a new {@code MockHttpServletRequest} with the supplied
+	 * Create a new {@code DispatcherHttpServletRequest} with the supplied
 	 * {@link ServletContext}, {@code method}, and {@code requestURI}.
 	 * <p>
 	 * The preferred locale will be set to {@link Locale#ENGLISH}.
+	 * 
 	 * @param servletContext the ServletContext that the request runs in (may be
-	 * {@code null} to use a default {@link MockServletContext})
-	 * @param method the request method (may be {@code null})
-	 * @param requestURI the request URI (may be {@code null})
+	 *                       {@code null} to use a default
+	 *                       {@link DispatcherServletContext})
+	 * @param method         the request method (may be {@code null})
+	 * @param requestURI     the request URI (may be {@code null})
 	 * @see #setMethod
 	 * @see #setRequestURI
 	 * @see #setPreferredLocales
-	 * @see MockServletContext
+	 * @see DispatcherServletContext
 	 */
 	public DispatcherHttpServletRequest(@Nullable ServletContext servletContext, @Nullable String method,
 			@Nullable String requestURI) {
@@ -333,7 +347,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Return the ServletContext that this request is associated with. (Not available in
+	 * Return the ServletContext that this request is associated with. (Not
+	 * available in
 	 * the standard HttpServletRequest interface for some reason.)
 	 */
 	@Override
@@ -364,7 +379,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Check whether this request is still active (that is, not completed yet), throwing
+	 * Check whether this request is still active (that is, not completed yet),
+	 * throwing
 	 * an IllegalStateException if not active anymore.
 	 */
 	protected void checkActive() throws IllegalStateException {
@@ -414,7 +430,9 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	 * Set the content of the request body as a byte array.
 	 * <p>
 	 * If the supplied byte array represents text such as XML or JSON, the
-	 * {@link #setCharacterEncoding character encoding} should typically be set as well.
+	 * {@link #setCharacterEncoding character encoding} should typically be set as
+	 * well.
+	 * 
 	 * @see #setCharacterEncoding(String)
 	 * @see #getContentAsByteArray()
 	 * @see #getContentAsString()
@@ -427,6 +445,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 
 	/**
 	 * Get the content of the request body as a byte array.
+	 * 
 	 * @return the content as a byte array (potentially {@code null})
 	 * @since 5.0
 	 * @see #setContent(byte[])
@@ -440,9 +459,12 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Get the content of the request body as a {@code String}, using the configured
 	 * {@linkplain #getCharacterEncoding character encoding}.
+	 * 
 	 * @return the content as a {@code String}, potentially {@code null}
-	 * @throws IllegalStateException if the character encoding has not been set
-	 * @throws UnsupportedEncodingException if the character encoding is not supported
+	 * @throws IllegalStateException        if the character encoding has not been
+	 *                                      set
+	 * @throws UnsupportedEncodingException if the character encoding is not
+	 *                                      supported
 	 * @since 5.0
 	 * @see #setContent(byte[])
 	 * @see #setCharacterEncoding(String)
@@ -477,8 +499,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 				if (mediaType.getCharset() != null) {
 					this.characterEncoding = mediaType.getCharset().name();
 				}
-			}
-			catch (IllegalArgumentException ex) {
+			} catch (IllegalArgumentException ex) {
 				// Try to get charset value anyway
 				int charsetIndex = contentType.toLowerCase().indexOf(CHARSET_PREFIX);
 				if (charsetIndex != -1) {
@@ -499,8 +520,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	public ServletInputStream getInputStream() {
 		if (this.inputStream != null) {
 			return this.inputStream;
-		}
-		else if (this.reader != null) {
+		} else if (this.reader != null) {
 			throw new IllegalStateException(
 					"Cannot call getInputStream() after getReader() has already been called for the current request");
 		}
@@ -514,7 +534,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Set a single value for the specified HTTP parameter.
 	 * <p>
-	 * If there are already one or more values registered for the given parameter name,
+	 * If there are already one or more values registered for the given parameter
+	 * name,
 	 * they will be replaced.
 	 */
 	public void setParameter(String name, String value) {
@@ -524,7 +545,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Set an array of values for the specified HTTP parameter.
 	 * <p>
-	 * If there are already one or more values registered for the given parameter name,
+	 * If there are already one or more values registered for the given parameter
+	 * name,
 	 * they will be replaced.
 	 */
 	public void setParameter(String name, String... values) {
@@ -533,7 +555,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Set all provided parameters <strong>replacing</strong> any existing values for the
+	 * Set all provided parameters <strong>replacing</strong> any existing values
+	 * for the
 	 * provided parameter names. To add without replacing existing values, use
 	 * {@link #addParameters(java.util.Map)}.
 	 */
@@ -542,11 +565,9 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		params.forEach((key, value) -> {
 			if (value instanceof String) {
 				setParameter(key, (String) value);
-			}
-			else if (value instanceof String[]) {
+			} else if (value instanceof String[]) {
 				setParameter(key, (String[]) value);
-			}
-			else {
+			} else {
 				throw new IllegalArgumentException("Parameter map value must be single value " + " or array of type ["
 						+ String.class.getName() + "]");
 			}
@@ -556,7 +577,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Add a single value for the specified HTTP parameter.
 	 * <p>
-	 * If there are already one or more values registered for the given parameter name,
+	 * If there are already one or more values registered for the given parameter
+	 * name,
 	 * the given value will be added to the end of the list.
 	 */
 	public void addParameter(String name, @Nullable String value) {
@@ -566,7 +588,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Add an array of values for the specified HTTP parameter.
 	 * <p>
-	 * If there are already one or more values registered for the given parameter name,
+	 * If there are already one or more values registered for the given parameter
+	 * name,
 	 * the given values will be added to the end of the list.
 	 */
 	public void addParameter(String name, String... values) {
@@ -577,14 +600,14 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 			System.arraycopy(oldArr, 0, newArr, 0, oldArr.length);
 			System.arraycopy(values, 0, newArr, oldArr.length, values.length);
 			this.parameters.put(name, newArr);
-		}
-		else {
+		} else {
 			this.parameters.put(name, values);
 		}
 	}
 
 	/**
-	 * Add all provided parameters <strong>without</strong> replacing any existing values.
+	 * Add all provided parameters <strong>without</strong> replacing any existing
+	 * values.
 	 * To replace existing values, use {@link #setParameters(java.util.Map)}.
 	 */
 	public void addParameters(Map<String, ?> params) {
@@ -592,11 +615,9 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		params.forEach((key, value) -> {
 			if (value instanceof String) {
 				addParameter(key, (String) value);
-			}
-			else if (value instanceof String[]) {
+			} else if (value instanceof String[]) {
 				addParameter(key, (String[]) value);
-			}
-			else {
+			} else {
 				throw new IllegalArgumentException("Parameter map value must be single value " + " or array of type ["
 						+ String.class.getName() + "]");
 			}
@@ -671,8 +692,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 			host = host.trim();
 			if (host.startsWith("[")) {
 				host = host.substring(1, host.indexOf(']'));
-			}
-			else if (host.contains(":")) {
+			} else if (host.contains(":")) {
 				host = host.substring(0, host.indexOf(':'));
 			}
 			return host;
@@ -694,8 +714,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 			int idx;
 			if (host.startsWith("[")) {
 				idx = host.indexOf(':', host.indexOf(']'));
-			}
-			else {
+			} else {
 				idx = host.indexOf(':');
 			}
 			if (idx != -1) {
@@ -711,8 +730,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	public BufferedReader getReader() throws UnsupportedEncodingException {
 		if (this.reader != null) {
 			return this.reader;
-		}
-		else if (this.inputStream != null) {
+		} else if (this.inputStream != null) {
 			throw new IllegalStateException(
 					"Cannot call getReader() after getInputStream() has already been called for the current request");
 		}
@@ -720,10 +738,10 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		if (this.content != null) {
 			InputStream sourceStream = new ByteArrayInputStream(this.content);
 			Reader sourceReader = (this.characterEncoding != null)
-					? new InputStreamReader(sourceStream, this.characterEncoding) : new InputStreamReader(sourceStream);
+					? new InputStreamReader(sourceStream, this.characterEncoding)
+					: new InputStreamReader(sourceStream);
 			this.reader = new BufferedReader(sourceReader);
-		}
-		else {
+		} else {
 			this.reader = EMPTY_BUFFERED_READER;
 		}
 		return this.reader;
@@ -753,8 +771,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		Assert.notNull(name, "Attribute name must not be null");
 		if (value != null) {
 			this.attributes.put(name, value);
-		}
-		else {
+		} else {
 			this.attributes.remove(name);
 		}
 	}
@@ -775,6 +792,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 
 	/**
 	 * Add a new preferred locale, before any existing locales.
+	 * 
 	 * @see #setPreferredLocales
 	 */
 	public void addPreferredLocale(Locale locale) {
@@ -784,8 +802,10 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Set the list of preferred locales, in descending order, effectively replacing any
+	 * Set the list of preferred locales, in descending order, effectively replacing
+	 * any
 	 * existing locales.
+	 * 
 	 * @since 3.2
 	 * @see #addPreferredLocale
 	 */
@@ -803,17 +823,18 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Return the first preferred {@linkplain Locale locale} configured in this mock
+	 * Return the first preferred {@linkplain Locale locale} configured in this Dispatcher
 	 * request.
 	 * <p>
 	 * If no locales have been explicitly configured, the default, preferred
-	 * {@link Locale} for the <em>server</em> mocked by this request is
+	 * {@link Locale} for the <em>server</em> Dispatchered by this request is
 	 * {@link Locale#ENGLISH}.
 	 * <p>
-	 * In contrast to the Servlet specification, this mock implementation does
+	 * In contrast to the Servlet specification, this Dispatcher implementation does
 	 * <strong>not</strong> take into consideration any locales specified via the
 	 * {@code Accept-Language} header.
-	 * @see javax.servlet.ServletRequest#getLocale()
+	 * 
+	 * @see jakarta.servlet.ServletRequest#getLocale()
 	 * @see #addPreferredLocale(Locale)
 	 * @see #setPreferredLocales(List)
 	 */
@@ -823,17 +844,19 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Return an {@linkplain Enumeration enumeration} of the preferred {@linkplain Locale
-	 * locales} configured in this mock request.
+	 * Return an {@linkplain Enumeration enumeration} of the preferred
+	 * {@linkplain Locale
+	 * locales} configured in this Dispatcher request.
 	 * <p>
 	 * If no locales have been explicitly configured, the default, preferred
-	 * {@link Locale} for the <em>server</em> mocked by this request is
+	 * {@link Locale} for the <em>server</em> Dispatchered by this request is
 	 * {@link Locale#ENGLISH}.
 	 * <p>
-	 * In contrast to the Servlet specification, this mock implementation does
+	 * In contrast to the Servlet specification, this Dispatcher implementation does
 	 * <strong>not</strong> take into consideration any locales specified via the
 	 * {@code Accept-Language} header.
-	 * @see javax.servlet.ServletRequest#getLocales()
+	 * 
+	 * @see jakarta.servlet.ServletRequest#getLocales()
 	 * @see #addPreferredLocale(Locale)
 	 * @see #setPreferredLocales(List)
 	 */
@@ -843,8 +866,10 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	/**
-	 * Set the boolean {@code secure} flag indicating whether the mock request was made
+	 * Set the boolean {@code secure} flag indicating whether the Dispatcher request was
+	 * made
 	 * using a secure channel, such as HTTPS.
+	 * 
 	 * @see #isSecure()
 	 * @see #getScheme()
 	 * @see #setScheme(String)
@@ -856,7 +881,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Return {@code true} if the {@link #setSecure secure} flag has been set to
 	 * {@code true} or if the {@link #getScheme scheme} is {@code https}.
-	 * @see javax.servlet.ServletRequest#isSecure()
+	 * 
+	 * @see jakarta.servlet.ServletRequest#isSecure()
 	 */
 	@Override
 	public boolean isSecure() {
@@ -866,12 +892,6 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	@Override
 	public RequestDispatcher getRequestDispatcher(String path) {
 		return null;
-	}
-
-	@Override
-	@Deprecated
-	public String getRealPath(String path) {
-		return this.servletContext.getRealPath(path);
 	}
 
 	public void setRemotePort(int remotePort) {
@@ -960,6 +980,38 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		return this.dispatcherType;
 	}
 
+	@Override
+	public String getRequestId() {
+		return "";
+	}
+
+	@Override
+	public String getProtocolRequestId() {
+		return "";
+	}
+
+		@Override
+	public ServletConnection getServletConnection() {
+		return new ServletConnection() {
+			@Override
+			public String getConnectionId() {
+				return DispatcherHttpServletRequest.this.getRequestId();
+			}
+			@Override
+			public String getProtocol() {
+				return DispatcherHttpServletRequest.this.getProtocol();
+			}
+			@Override
+			public String getProtocolConnectionId() {
+				return DispatcherHttpServletRequest.this.getProtocolRequestId();
+			}
+			@Override
+			public boolean isSecure() {
+				return DispatcherHttpServletRequest.this.isSecure();
+			}
+		};
+	}
+
 	// ---------------------------------------------------------------------
 	// HttpServletRequest interface
 	// ---------------------------------------------------------------------
@@ -978,8 +1030,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		this.cookies = (ObjectUtils.isEmpty(cookies) ? null : cookies);
 		if (this.cookies == null) {
 			removeHeader(HttpHeaders.COOKIE);
-		}
-		else {
+		} else {
 			doAddHeaderValue(HttpHeaders.COOKIE, encodeCookies(this.cookies), true);
 		}
 	}
@@ -998,16 +1049,19 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Add an HTTP header entry for the given name.
 	 * <p>
-	 * While this method can take any {@code Object} as a parameter, it is recommended to
+	 * While this method can take any {@code Object} as a parameter, it is
+	 * recommended to
 	 * use the following types:
 	 * <ul>
 	 * <li>String or any Object to be converted using {@code toString()}; see
 	 * {@link #getHeader}.</li>
-	 * <li>String, Number, or Date for date headers; see {@link #getDateHeader}.</li>
+	 * <li>String, Number, or Date for date headers; see
+	 * {@link #getDateHeader}.</li>
 	 * <li>String or Number for integer headers; see {@link #getIntHeader}.</li>
 	 * <li>{@code String[]} or {@code Collection<String>} for multiple values; see
 	 * {@link #getHeaders}.</li>
 	 * </ul>
+	 * 
 	 * @see #getHeaderNames
 	 * @see #getHeaders
 	 * @see #getHeader
@@ -1016,8 +1070,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	public void addHeader(String name, Object value) {
 		if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name) && !this.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
 			setContentType(value.toString());
-		}
-		else if (HttpHeaders.ACCEPT_LANGUAGE.equalsIgnoreCase(name)
+		} else if (HttpHeaders.ACCEPT_LANGUAGE.equalsIgnoreCase(name)
 				&& !this.headers.containsKey(HttpHeaders.ACCEPT_LANGUAGE)) {
 			try {
 				HttpHeaders headers = new HttpHeaders();
@@ -1028,13 +1081,11 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 				if (this.locales.isEmpty()) {
 					this.locales.add(Locale.ENGLISH);
 				}
-			}
-			catch (IllegalArgumentException ex) {
+			} catch (IllegalArgumentException ex) {
 				// Invalid Accept-Language format -> just store plain header
 			}
 			doAddHeaderValue(name, value, true);
-		}
-		else {
+		} else {
 			doAddHeaderValue(name, value, false);
 		}
 	}
@@ -1048,17 +1099,16 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		}
 		if (value instanceof Collection) {
 			header.addValues((Collection<?>) value);
-		}
-		else if (value.getClass().isArray()) {
+		} else if (value.getClass().isArray()) {
 			header.addValueArray(value);
-		}
-		else {
+		} else {
 			header.addValue(value);
 		}
 	}
 
 	/**
 	 * Remove already registered entries for the specified HTTP header, if any.
+	 * 
 	 * @since 4.3.20
 	 */
 	public void removeHeader(String name) {
@@ -1069,16 +1119,19 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	/**
 	 * Return the long timestamp for the date header with the given {@code name}.
 	 * <p>
-	 * If the internal value representation is a String, this method will try to parse it
+	 * If the internal value representation is a String, this method will try to
+	 * parse it
 	 * as a date using the supported date formats:
 	 * <ul>
 	 * <li>"EEE, dd MMM yyyy HH:mm:ss zzz"</li>
 	 * <li>"EEE, dd-MMM-yy HH:mm:ss zzz"</li>
 	 * <li>"EEE MMM dd HH:mm:ss yyyy"</li>
 	 * </ul>
+	 * 
 	 * @param name the header name
-	 * @see <a href="https://tools.ietf.org/html/rfc7231#section-7.1.1.1">Section 7.1.1.1
-	 * of RFC 7231</a>
+	 * @see <a href="https://tools.ietf.org/html/rfc7231#section-7.1.1.1">Section
+	 *      7.1.1.1
+	 *      of RFC 7231</a>
 	 */
 	@Override
 	public long getDateHeader(String name) {
@@ -1086,18 +1139,14 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		Object value = (header != null ? header.getValue() : null);
 		if (value instanceof Date) {
 			return ((Date) value).getTime();
-		}
-		else if (value instanceof Number) {
+		} else if (value instanceof Number) {
 			return ((Number) value).longValue();
-		}
-		else if (value instanceof String) {
+		} else if (value instanceof String) {
 			return parseDateHeader(name, (String) value);
-		}
-		else if (value != null) {
+		} else if (value != null) {
 			throw new IllegalArgumentException(
 					"Value for header '" + name + "' is not a Date, Number, or String: " + value);
-		}
-		else {
+		} else {
 			return -1L;
 		}
 	}
@@ -1108,8 +1157,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 			simpleDateFormat.setTimeZone(GMT);
 			try {
 				return simpleDateFormat.parse(value).getTime();
-			}
-			catch (ParseException ex) {
+			} catch (ParseException ex) {
 				// ignore
 			}
 		}
@@ -1140,14 +1188,11 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		Object value = (header != null ? header.getValue() : null);
 		if (value instanceof Number) {
 			return ((Number) value).intValue();
-		}
-		else if (value instanceof String) {
+		} else if (value instanceof String) {
 			return Integer.parseInt((String) value);
-		}
-		else if (value != null) {
+		} else if (value != null) {
 			throw new NumberFormatException("Value for header '" + name + "' is not a Number: " + value);
-		}
-		else {
+		} else {
 			return -1;
 		}
 	}
@@ -1175,7 +1220,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	@Override
 	@Nullable
 	public String getPathTranslated() {
-		return (this.pathInfo != null ? getRealPath(this.pathInfo) : null);
+		return (this.pathInfo != null ? this.servletContext.getRealPath(this.pathInfo) : null);
 	}
 
 	public void setContextPath(String contextPath) {
@@ -1276,8 +1321,8 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	public void setSession(HttpSession session) {
 		this.session = session;
 		if (session instanceof DispatcherHttpSession) {
-			DispatcherHttpSession mockSession = ((DispatcherHttpSession) session);
-			mockSession.access();
+			DispatcherHttpSession DispatcherSession = ((DispatcherHttpSession) session);
+			DispatcherSession.access();
 		}
 	}
 
@@ -1304,8 +1349,10 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 
 	/**
 	 * The implementation of this (Servlet 3.1+) method calls
-	 * {@link DispatcherHttpSession#changeSessionId()} if the session is a mock session.
+	 * {@link DispatcherHttpSession#changeSessionId()} if the session is a Dispatcher
+	 * session.
 	 * Otherwise it simply returns the current session id.
+	 * 
 	 * @since 4.0.3
 	 */
 	@Override
@@ -1342,12 +1389,6 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	@Override
 	public boolean isRequestedSessionIdFromURL() {
 		return this.requestedSessionIdFromURL;
-	}
-
-	@Override
-	@Deprecated
-	public boolean isRequestedSessionIdFromUrl() {
-		return isRequestedSessionIdFromURL();
 	}
 
 	@Override

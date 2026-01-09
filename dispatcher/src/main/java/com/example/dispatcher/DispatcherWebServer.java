@@ -19,25 +19,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import javax.servlet.ServletException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.boot.web.server.WebServer;
+import org.springframework.boot.web.server.WebServerException;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.util.StreamUtils;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.web.server.WebServer;
-import org.springframework.boot.web.server.WebServerException;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.util.SocketUtils;
-import org.springframework.util.StreamUtils;
+import jakarta.servlet.ServletException;
 
 /**
  * @author Dave Syer
  *
  */
-@SuppressWarnings("restriction")
 class DispatcherWebServer implements WebServer {
 
 	static Log logger = LogFactory.getLog(DispatcherWebServer.class);

@@ -19,13 +19,13 @@ package com.example.dispatcher;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
 
 import org.springframework.util.Assert;
 
 /**
- * Delegating implementation of {@link javax.servlet.ServletInputStream}.
+ * Delegating implementation of {@link jakarta.servlet.ServletInputStream}.
  *
  * <p>
  * Used by {@link DispatcherHttpServletRequest}; typically not directly used for testing
