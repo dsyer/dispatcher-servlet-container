@@ -60,7 +60,7 @@ public class DispatcherServletContext implements ServletContext {
 
 	private Map<String, DispatcherFilterRegistration> filters = new LinkedHashMap<String, DispatcherFilterRegistration>();
 
-	DispatcherFilterChain filterChain() {
+	public DispatcherFilterChain filterChain() {
 		return new DispatcherFilterChain(this.servlet.getServlet(), filters.values().stream()
 				.map(dynamic -> dynamic.getFilter()).collect(Collectors.toList()).toArray(new Filter[0]));
 	}

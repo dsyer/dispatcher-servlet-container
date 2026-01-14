@@ -13,20 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.dispatcher;
+package com.example.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.example.reactor.ReactorWebServerFactory;
+import com.example.standard.DispatcherWebServerFactory;
+
+import reactor.netty.http.server.HttpServer;
+
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ServerProperties.class)
 public class DispatcherWebServerAutoConfiguration {
 
 	@Bean
-	public ConfigurableServletWebServerFactory webServerFactory(ServerProperties server) {
+	@ConditionalOnClass(HttpServer.class)
+	public ConfigurableServletWebServerFactory reactorWebServerFactory(ServerProperties server) {
+		return new ReactorWebServerFactory(server);
+	}
+
+	@Bean
+	@ConditionalOnMissingClass("reactor.netty.http.server.HttpServer")
+	public ConfigurableServletWebServerFactory defaultWebServerFactory(ServerProperties server) {
 		return new DispatcherWebServerFactory(server);
 	}
 

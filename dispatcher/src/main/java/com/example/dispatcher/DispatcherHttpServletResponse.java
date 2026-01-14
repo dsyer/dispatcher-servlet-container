@@ -592,12 +592,12 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	@Override
 	public void setHeader(String name, String value) {
-		setHeaderValue(name, value);
+		setHeaderValue(name, value == null ? "" : value);
 	}
 
 	@Override
 	public void addHeader(String name, String value) {
-		addHeaderValue(name, value);
+		addHeaderValue(name, value == null ? "" : value);
 	}
 
 	@Override

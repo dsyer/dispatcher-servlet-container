@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.dispatcher;
+package com.example.standard;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,6 +26,9 @@ import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.util.StreamUtils;
 
+import com.example.dispatcher.DispatcherHttpServletRequest;
+import com.example.dispatcher.DispatcherHttpServletResponse;
+import com.example.dispatcher.DispatcherServletContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.dispatcher;
+package com.example.reactor;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -42,7 +42,7 @@ import org.springframework.boot.web.servlet.ServletContextInitializer;
  * @author Dave Syer
  *
  */
-public class DispatcherWebServerFactory implements ConfigurableServletWebServerFactory {
+public class ReactorWebServerFactory implements ConfigurableServletWebServerFactory {
 
 	private ServerProperties server;
 
@@ -50,7 +50,7 @@ public class DispatcherWebServerFactory implements ConfigurableServletWebServerF
 
 	private final ServletWebServerSettings settings = new ServletWebServerSettings();
 
-	public DispatcherWebServerFactory(ServerProperties server) {
+	public ReactorWebServerFactory(ServerProperties server) {
 		this.server = server;
 	}
 
@@ -97,7 +97,7 @@ public class DispatcherWebServerFactory implements ConfigurableServletWebServerF
 
 	@Override
 	public WebServer getWebServer(ServletContextInitializer... initializers) {
-		return new DispatcherWebServer(server.getPort() != null ? server.getPort() : 8080, initializers);
+		return new ReactorWebServer(server.getPort() != null ? server.getPort() : 8080, initializers);
 	}
 
 	@Override
