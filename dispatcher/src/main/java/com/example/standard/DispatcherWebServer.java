@@ -63,6 +63,9 @@ class DispatcherWebServer implements WebServer {
 
 	@Override
 	public void stop() throws WebServerException {
+		if (server == null) {
+			return;
+		}
 		server.stop(1);
 	}
 
