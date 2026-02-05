@@ -29,10 +29,9 @@ import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerF
 import org.springframework.context.annotation.Bean;
 
 import com.example.coyote.CoyoteWebServerFactory;
+import com.example.netty.NettyWebServerFactory;
 import com.example.reactor.ReactorWebServerFactory;
 import com.example.standard.DispatcherWebServerFactory;
-
-import reactor.netty.http.server.HttpServer;
 
 @AutoConfiguration
 @ConditionalOnMissingClass("org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration")
@@ -43,14 +42,14 @@ public class DispatcherWebServerAutoConfiguration {
 	private static Log logger = LogFactory.getLog(DispatcherWebServerAutoConfiguration.class);
 
 	@Bean
-	@ConditionalOnClass(Request.class)
+	@ConditionalOnClass(name = "org.apache.coyote.Request")
 	public ConfigurableServletWebServerFactory coyoteWebServerFactory(ServerProperties server) {
 		logger.info("Creating CoyoteWebServerFactory");
 		return new CoyoteWebServerFactory(server);
 	}
 
 	@Bean
-	@ConditionalOnClass(HttpServer.class)
+	@ConditionalOnClass(name = "reactor.netty.http.server.HttpServer")
 	public ConfigurableServletWebServerFactory reactorWebServerFactory(ServerProperties server) {
 		logger.info("Creating ReactorWebServerFactory");
 		return new ReactorWebServerFactory(server);
@@ -61,7 +60,7 @@ public class DispatcherWebServerAutoConfiguration {
 	@ConditionalOnClass(name = "io.netty.bootstrap.ServerBootstrap")
 	public ConfigurableServletWebServerFactory nettyWebServerFactory(ServerProperties server) {
 		logger.info("Creating NettyWebServerFactory");
-		return new CoyoteWebServerFactory(server);
+		return new NettyWebServerFactory(server);
 	}
 
 	@Bean

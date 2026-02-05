@@ -104,15 +104,14 @@ public class NettyWebServer implements WebServer {
 					.channel(NioServerSocketChannel.class)
 					.childHandler(new MyServerInitializer(this.servletContext));
 
-			Channel ch = b.bind(this.port).sync().channel();
+			this.server = b.bind(this.port).sync();
 
-			this.server = ch.closeFuture().sync();
 			logger.info("Server started on port: " + getPort());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			group.shutdownGracefully();
 			throw new WebServerException("Cannot start server", e);
 		} finally {
-			group.shutdownGracefully();
 		}
 	}
 
@@ -173,6 +172,8 @@ public class NettyWebServer implements WebServer {
 					LastHttpContent trailer = (LastHttpContent) msg;
 					transfer(servletRequest, servletResponse);
 					writeResponse(ctx, trailer, this.servletResponse);
+					this.servletRequest = new DispatcherHttpServletRequest(servletContext);
+					this.servletResponse = new DispatcherHttpServletResponse();
 				}
 			}
 		}

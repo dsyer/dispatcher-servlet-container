@@ -18,6 +18,9 @@
 	<modules>
 		<module>dispatcher</module>
 		<module>sample</module>
+		<module>netty-sample</module>
+		<module>reactor-sample</module>
+		<module>coyote-sample</module>
 	</modules>
 
 	<properties>
