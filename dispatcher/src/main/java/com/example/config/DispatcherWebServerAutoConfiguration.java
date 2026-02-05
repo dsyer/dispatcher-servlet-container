@@ -17,6 +17,8 @@ package com.example.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.coyote.Request;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -25,20 +27,27 @@ import org.springframework.boot.web.server.WebServerFactory;
 import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-import com.example.netty.NettyWebServerFactory;
+import com.example.coyote.CoyoteWebServerFactory;
 import com.example.reactor.ReactorWebServerFactory;
 import com.example.standard.DispatcherWebServerFactory;
 
 import reactor.netty.http.server.HttpServer;
 
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
+@ConditionalOnMissingClass("org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration")
 @EnableConfigurationProperties(ServerProperties.class)
 @ConditionalOnMissingBean(WebServerFactory.class)
 public class DispatcherWebServerAutoConfiguration {
 
 	private static Log logger = LogFactory.getLog(DispatcherWebServerAutoConfiguration.class);
+
+	@Bean
+	@ConditionalOnClass(Request.class)
+	public ConfigurableServletWebServerFactory coyoteWebServerFactory(ServerProperties server) {
+		logger.info("Creating CoyoteWebServerFactory");
+		return new CoyoteWebServerFactory(server);
+	}
 
 	@Bean
 	@ConditionalOnClass(HttpServer.class)
@@ -52,11 +61,11 @@ public class DispatcherWebServerAutoConfiguration {
 	@ConditionalOnClass(name = "io.netty.bootstrap.ServerBootstrap")
 	public ConfigurableServletWebServerFactory nettyWebServerFactory(ServerProperties server) {
 		logger.info("Creating NettyWebServerFactory");
-		return new NettyWebServerFactory(server);
+		return new CoyoteWebServerFactory(server);
 	}
 
 	@Bean
-	@ConditionalOnMissingClass("io.netty.bootstrap.ServerBootstrap")
+	@ConditionalOnMissingClass({"io.netty.bootstrap.ServerBootstrap", "org.apache.coyote.Request"})
 	public ConfigurableServletWebServerFactory defaultWebServerFactory(ServerProperties server) {
 		logger.info("Creating DispatcherWebServerFactory");
 		return new DispatcherWebServerFactory(server);
