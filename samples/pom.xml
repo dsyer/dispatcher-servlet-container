@@ -10,14 +10,16 @@
 	</parent>
 
 	<groupId>com.example</groupId>
-	<artifactId>parent-demo</artifactId>
+	<artifactId>samples-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Parent Demo</name>
+	<name>Samples Parent</name>
 
 	<modules>
-		<module>dispatcher</module>
-		<module>samples</module>
+		<module>http-dispatcher</module>
+		<module>netty-dispatcher</module>
+		<module>reactor-dispatcher</module>
+		<module>coyote-dispatcher</module>
 	</modules>
 
 	<properties>

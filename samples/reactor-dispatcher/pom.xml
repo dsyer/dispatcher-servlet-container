@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>netty-sample</artifactId>
+	<artifactId>reactor-dispatcher</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>netty-sample</name>
+	<name>reactor-dispatcher</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
@@ -26,12 +26,8 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec-http</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-native-epoll</artifactId>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty-http</artifactId>
 		</dependency>
 
 		<dependency>
