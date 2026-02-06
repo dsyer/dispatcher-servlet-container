@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>dispatcher-sample</artifactId>
+	<artifactId>http-dispatcher</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<name>http-dispatcher</name>
 	<description>Demo project for Spring Boot</description>
