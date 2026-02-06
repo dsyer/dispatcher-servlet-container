@@ -1,0 +1,1 @@
+export INIT_SQL=./suffix/db20/db.sql

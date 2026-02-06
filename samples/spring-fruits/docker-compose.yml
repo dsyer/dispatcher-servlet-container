@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:14.2
+    network_mode: "host"
+    environment:
+      - POSTGRES_PASSWORD=fruits
+      - POSTGRES_USER=fruits
+      - POSTGRES_DB=fruits
+    volumes:
+      - "./schema.sql:/docker-entrypoint-initdb.d/0-schema.sql"
+      - "${INIT_SQL}:/docker-entrypoint-initdb.d/1-db.sql"

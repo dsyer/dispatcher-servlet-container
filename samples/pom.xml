@@ -20,6 +20,7 @@
 		<module>netty-dispatcher</module>
 		<module>reactor-dispatcher</module>
 		<module>coyote-dispatcher</module>
+		<module>spring-fruits</module>
 	</modules>
 
 	<properties>
