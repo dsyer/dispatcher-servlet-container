@@ -40,6 +40,12 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>io.helidon.webserver</groupId>
+			<artifactId>helidon-webserver</artifactId>
+			<version>4.2.2</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-core</artifactId>
 			<optional>true</optional>

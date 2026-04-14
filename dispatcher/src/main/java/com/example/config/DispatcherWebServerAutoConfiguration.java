@@ -17,7 +17,6 @@ package com.example.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.coyote.Request;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,6 +28,7 @@ import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerF
 import org.springframework.context.annotation.Bean;
 
 import com.example.coyote.CoyoteWebServerFactory;
+import com.example.helidon.HelidonWebServerFactory;
 import com.example.netty.NettyWebServerFactory;
 import com.example.reactor.ReactorWebServerFactory;
 import com.example.standard.DispatcherWebServerFactory;
@@ -57,6 +57,14 @@ public class DispatcherWebServerAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingClass("reactor.netty.http.server.HttpServer")
+	@ConditionalOnClass(name = "io.helidon.webserver.WebServer")
+	public ConfigurableServletWebServerFactory helidonWebServerFactory(ServerProperties server) {
+		logger.info("Creating HelidonWebServerFactory");
+		return new HelidonWebServerFactory(server);
+	}
+
+	@Bean
+	@ConditionalOnMissingClass({ "reactor.netty.http.server.HttpServer", "io.helidon.webserver.WebServer" })
 	@ConditionalOnClass(name = "io.netty.bootstrap.ServerBootstrap")
 	public ConfigurableServletWebServerFactory nettyWebServerFactory(ServerProperties server) {
 		logger.info("Creating NettyWebServerFactory");
@@ -64,7 +72,8 @@ public class DispatcherWebServerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingClass({"io.netty.bootstrap.ServerBootstrap", "org.apache.coyote.Request"})
+	@ConditionalOnMissingClass({ "io.netty.bootstrap.ServerBootstrap", "org.apache.coyote.Request",
+			"io.helidon.webserver.WebServer" })
 	public ConfigurableServletWebServerFactory defaultWebServerFactory(ServerProperties server) {
 		logger.info("Creating DispatcherWebServerFactory");
 		return new DispatcherWebServerFactory(server);
