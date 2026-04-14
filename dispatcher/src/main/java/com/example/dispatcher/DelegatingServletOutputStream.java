@@ -56,6 +56,11 @@ public class DelegatingServletOutputStream extends ServletOutputStream {
 	}
 
 	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+		this.targetStream.write(b, off, len);
+	}
+
+	@Override
 	public void write(int b) throws IOException {
 		this.targetStream.write(b);
 	}

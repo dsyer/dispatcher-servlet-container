@@ -85,7 +85,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	private boolean charset = false;
 
-	private final ByteArrayOutputStream content = new ByteArrayOutputStream(1024);
+	private final ByteArrayOutputStream content = new ByteArrayOutputStream(8192);
 
 	private final ServletOutputStream outputStream = new ResponseServletOutputStream(this.content);
 
