@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.1</version>
+		<version>4.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>org.springframework.samples</groupId>
@@ -15,17 +15,13 @@
 	<description>Spring Boot 4 example</description>
 	<properties>
 		<java.version>21</java.version>
-		<spring-boot.version>4.0.1</spring-boot.version>
+		<spring-boot.version>4.0.5</spring-boot.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>com.example</groupId>
 			<artifactId>dispatcher</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -40,6 +36,16 @@
 					<artifactId>spring-boot-starter-tomcat</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.helidon.webserver</groupId>
+			<artifactId>helidon-webserver</artifactId>
+			<version>4.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.helidon.logging</groupId>
+			<artifactId>helidon-logging-slf4j</artifactId>
+			<version>4.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
