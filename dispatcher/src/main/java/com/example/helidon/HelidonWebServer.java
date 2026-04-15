@@ -54,8 +54,7 @@ class HelidonWebServer implements WebServer {
 			for (ServletContextInitializer initializer : initializers) {
 				initializer.onStartup(servletContext);
 			}
-		}
-		catch (ServletException e) {
+		} catch (ServletException e) {
 			throw new IllegalStateException("Cannot initialize", e);
 		}
 	}
@@ -71,10 +70,10 @@ class HelidonWebServer implements WebServer {
 	@Override
 	public void start() throws WebServerException {
 		this.server = io.helidon.webserver.WebServer.builder()
-			.port(this.port)
-			.routing(routing -> routing.any(new MyHandler(this.servletContext)))
-			.build()
-			.start();
+				.port(this.port)
+				.routing(routing -> routing.any(new MyHandler(this.servletContext)))
+				.build()
+				.start();
 		logger.info("Server started on port: " + getPort());
 	}
 
@@ -96,7 +95,7 @@ class HelidonWebServer implements WebServer {
 			DispatcherHttpServletRequest servletRequest = new DispatcherHttpServletRequest(servletContext);
 			servletRequest.setHeaders(new HelidonHeadersAdapter(request.headers()));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
-
+			servletResponse.setHeaders(new HelidonHeadersAdapter(response.headers()));
 			servletRequest.setMethod(request.prologue().method().text());
 			servletRequest.setRequestURI(request.requestedUri().path().path());
 			UriQuery query = request.query();
@@ -110,14 +109,9 @@ class HelidonWebServer implements WebServer {
 			transfer(servletRequest, servletResponse);
 
 			response.status(servletResponse.getStatus());
-			for (String headerName : servletResponse.getHeaderNames()) {
-				for (String value : servletResponse.getHeaders(headerName)) {
-					response.header(headerName, value);
-				}
-			}
 
 			byte[] body = servletResponse.getContentAsByteArray();
-			response.header("Content-Length", Integer.toString(body.length));
+			response.contentLength(body.length);
 			response.send(body);
 		}
 
@@ -125,8 +119,7 @@ class HelidonWebServer implements WebServer {
 				DispatcherHttpServletResponse servletResponse) {
 			try {
 				servletContext.filterChain().doFilter(servletRequest, servletResponse);
-			}
-			catch (IOException | ServletException e) {
+			} catch (IOException | ServletException e) {
 				throw new IllegalStateException("Failed", e);
 			}
 		}

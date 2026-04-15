@@ -98,6 +98,7 @@ public class CoyoteWebServer implements WebServer {
 			DispatcherHttpServletRequest servletRequest = new DispatcherHttpServletRequest(servletContext);
 			servletRequest.setHeaders(new CoyoteHeadersAdapter(req.getMimeHeaders()));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
+			servletResponse.setHeaders(new CoyoteHeadersAdapter(res.getMimeHeaders()));
 			
 			// Extract request data from Coyote Request
 			servletRequest.setMethod(req.getMethod().toString());
@@ -165,13 +166,6 @@ public class CoyoteWebServer implements WebServer {
 			
 			// Copy response data back to Coyote Response
 			res.setStatus(servletResponse.getStatus());
-			
-			// Copy response headers
-			for (String headerName : servletResponse.getHeaderNames()) {
-				for (String headerValue : servletResponse.getHeaders(headerName)) {
-					res.getMimeHeaders().addValue(headerName).setString(headerValue);
-				}
-			}
 			
 			// Write response body
 			byte[] responseBody = servletResponse.getContentAsByteArray();
