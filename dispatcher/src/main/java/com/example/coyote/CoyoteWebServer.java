@@ -96,19 +96,12 @@ public class CoyoteWebServer implements WebServer {
 		public void service(Request req, Response res) throws Exception {
 			// Create new request/response objects for each request
 			DispatcherHttpServletRequest servletRequest = new DispatcherHttpServletRequest(servletContext);
+			servletRequest.setHeaders(new CoyoteHeadersAdapter(req));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
 			
 			// Extract request data from Coyote Request
 			servletRequest.setMethod(req.getMethod().toString());
 			servletRequest.setRequestURI(req.requestURI().toString());
-			
-			// Copy request headers
-			int headerCount = req.getMimeHeaders().size();
-			for (int i = 0; i < headerCount; i++) {
-				String name = req.getMimeHeaders().getName(i).toString();
-				String value = req.getMimeHeaders().getValue(i).toString();
-				servletRequest.addHeader(name, value);
-			}
 			
 			// Copy request body if present
 			int contentLength = req.getContentLength();
