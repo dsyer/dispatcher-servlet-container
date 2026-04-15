@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.coyote.Request;
 import org.apache.tomcat.util.http.MimeHeaders;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
@@ -31,10 +30,6 @@ import org.springframework.util.MultiValueMap;
 class CoyoteHeadersAdapter implements MultiValueMap<String, String> {
 
 	private final MimeHeaders headers;
-
-	CoyoteHeadersAdapter(Request request) {
-		this(request.getMimeHeaders());
-	}
 
 	CoyoteHeadersAdapter(MimeHeaders headers) {
 		this.headers = headers;

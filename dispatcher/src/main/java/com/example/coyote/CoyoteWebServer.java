@@ -96,7 +96,7 @@ public class CoyoteWebServer implements WebServer {
 		public void service(Request req, Response res) throws Exception {
 			// Create new request/response objects for each request
 			DispatcherHttpServletRequest servletRequest = new DispatcherHttpServletRequest(servletContext);
-			servletRequest.setHeaders(new CoyoteHeadersAdapter(req));
+			servletRequest.setHeaders(new CoyoteHeadersAdapter(req.getMimeHeaders()));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
 			
 			// Extract request data from Coyote Request
