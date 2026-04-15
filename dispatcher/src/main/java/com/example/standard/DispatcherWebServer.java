@@ -95,10 +95,12 @@ class DispatcherWebServer implements WebServer {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
+			request.setHeaders(new StandardHeadersAdapter(t.getRequestHeaders()));
 			request.setMethod(t.getRequestMethod());
 			request.setRequestURI(t.getRequestURI().toString());
 			request.setContent(StreamUtils.copyToByteArray(t.getRequestBody()));
 			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
+			response.setHeaders(new StandardHeadersAdapter(t.getResponseHeaders()));
 			try {
 				servletContext.filterChain().doFilter(request, response);
 			}
@@ -106,9 +108,11 @@ class DispatcherWebServer implements WebServer {
 				throw new IllegalStateException("Failed", e);
 			}
 
-			t.sendResponseHeaders(response.getStatus(), response.getContentLength());
+			byte[] body = response.getContentAsByteArray();
+			long contentLength = response.getContentLengthLong() > 0 ? response.getContentLengthLong() : body.length;
+			t.sendResponseHeaders(response.getStatus(), contentLength);
 			OutputStream os = t.getResponseBody();
-			os.write(response.getContentAsByteArray());
+			os.write(body);
 			os.close();
 		}
 

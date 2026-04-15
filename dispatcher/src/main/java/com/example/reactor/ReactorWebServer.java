@@ -102,6 +102,7 @@ class ReactorWebServer implements WebServer {
 		@Override
 		public Mono<Void> apply(HttpServerRequest t, HttpServerResponse r) {
 			DispatcherHttpServletRequest request = new DispatcherHttpServletRequest(servletContext);
+			request.setHeaders(new ReactorHeadersAdapter(t.requestHeaders()));
 			request.setMethod(t.method().name());
 			request.setRequestURI(t.uri());
 			return t.receive().aggregate().asByteArray().defaultIfEmpty(new byte[0])
@@ -110,6 +111,7 @@ class ReactorWebServer implements WebServer {
 
 		private Publisher<Void> transfer(DispatcherHttpServletRequest request, HttpServerResponse r, byte[] body) {
 			DispatcherHttpServletResponse response = new DispatcherHttpServletResponse();
+			response.setHeaders(new ReactorHeadersAdapter(r.responseHeaders()));
 			request.setContent(body);
 			try {
 				servletContext.filterChain().doFilter(request, response);
@@ -119,7 +121,9 @@ class ReactorWebServer implements WebServer {
 
 			r.status(response.getStatus());
 			byte[] bytes = response.getContentAsByteArray();
-			r.addHeader(HttpHeaderNames.CONTENT_LENGTH, bytes.length + "");
+			if (!r.responseHeaders().contains(HttpHeaderNames.CONTENT_LENGTH)) {
+				r.responseHeaders().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length + "");
+			}
 			return r.sendByteArray(Mono.just(bytes));
 		}
 

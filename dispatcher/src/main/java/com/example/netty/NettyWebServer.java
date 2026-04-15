@@ -33,7 +33,6 @@ import com.example.dispatcher.DispatcherServletContext;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -48,6 +47,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.compression.CompressionOptions;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpContentCompressor;
@@ -136,6 +136,7 @@ public class NettyWebServer implements WebServer {
 	static class MyServerHandler extends SimpleChannelInboundHandler<HttpObject> {
 
 		private HttpRequest request;
+		private io.netty.handler.codec.http.HttpHeaders responseHeaders = new DefaultHttpHeaders();
 		private DispatcherHttpServletRequest servletRequest;
 		private DispatcherHttpServletResponse servletResponse;
 		private DispatcherServletContext servletContext;
@@ -144,6 +145,7 @@ public class NettyWebServer implements WebServer {
 			this.servletContext = servletContext;
 			this.servletRequest = new DispatcherHttpServletRequest(servletContext);
 			this.servletResponse = new DispatcherHttpServletResponse();
+			this.servletResponse.setHeaders(new NettyHeadersAdapter(this.responseHeaders));
 		}
 
 		@Override
@@ -155,6 +157,7 @@ public class NettyWebServer implements WebServer {
 		public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
 			if (msg instanceof HttpRequest) {
 				HttpRequest request = this.request = (HttpRequest) msg;
+				this.servletRequest.setHeaders(new NettyHeadersAdapter(request.headers()));
 				this.servletRequest.setMethod(request.method().name());
 				this.servletRequest.setRequestURI(request.uri());
 
@@ -172,8 +175,10 @@ public class NettyWebServer implements WebServer {
 					LastHttpContent trailer = (LastHttpContent) msg;
 					transfer(servletRequest, servletResponse);
 					writeResponse(ctx, trailer, this.servletResponse);
+					this.responseHeaders = new DefaultHttpHeaders();
 					this.servletRequest = new DispatcherHttpServletRequest(servletContext);
 					this.servletResponse = new DispatcherHttpServletResponse();
+					this.servletResponse.setHeaders(new NettyHeadersAdapter(this.responseHeaders));
 				}
 			}
 		}
@@ -207,15 +212,15 @@ public class NettyWebServer implements WebServer {
 
 			FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,
 					Unpooled.copiedBuffer(bytes));
-			httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length + "");
-
-			httpResponse.headers().set(HttpHeaderNames.CONTENT_TYPE, servletResponse.getContentType());
+			httpResponse.headers().set(this.responseHeaders);
+			if (!httpResponse.headers().contains(HttpHeaderNames.CONTENT_LENGTH)) {
+				httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length + "");
+			}
 
 			if (keepAlive) {
-				httpResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH,
-						httpResponse.content().readableBytes());
-				httpResponse.headers().set(HttpHeaderNames.CONNECTION,
-						HttpHeaderValues.KEEP_ALIVE);
+				if (!httpResponse.headers().contains(HttpHeaderNames.CONNECTION)) {
+					httpResponse.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+				}
 			}
 			ctx.write(httpResponse);
 
