@@ -35,14 +35,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
-import org.springframework.util.LinkedCaseInsensitiveMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.WebUtils;
 
@@ -109,7 +108,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	private final List<Cookie> cookies = new ArrayList<>();
 
-	private final Map<String, HeaderValueHolder> headers = new LinkedCaseInsensitiveMap<>();
+	private HttpHeaders headers = new HttpHeaders();
 
 	private int status = HttpServletResponse.SC_OK;
 
@@ -120,6 +119,10 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	private String forwardedUrl;
 
 	private final List<String> includedUrls = new ArrayList<>();
+
+	public void setHeaders(MultiValueMap<String, String> headers) {
+		this.headers = new HttpHeaders(headers);
+	}
 
 	// ---------------------------------------------------------------------
 	// ServletResponse interface
@@ -419,7 +422,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	@Override
 	public boolean containsHeader(String name) {
-		return (this.headers.get(name) != null);
+		return this.headers.containsHeader(name);
 	}
 
 	/**
@@ -431,7 +434,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 */
 	@Override
 	public Collection<String> getHeaderNames() {
-		return this.headers.keySet();
+		return this.headers.headerNames();
 	}
 
 	/**
@@ -447,8 +450,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	@Override
 	@Nullable
 	public String getHeader(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		return (header != null ? header.getStringValue() : null);
+		return this.headers.getFirst(name);
 	}
 
 	/**
@@ -462,13 +464,8 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 */
 	@Override
 	public List<String> getHeaders(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		if (header != null) {
-			return header.getStringValues();
-		}
-		else {
-			return Collections.emptyList();
-		}
+		List<String> values = this.headers.get(name);
+		return (values != null ? values : Collections.emptyList());
 	}
 
 	/**
@@ -480,8 +477,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 */
 	@Nullable
 	public Object getHeaderValue(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		return (header != null ? header.getValue() : null);
+		return getHeader(name);
 	}
 
 	/**
@@ -490,13 +486,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 * @return the associated header values, or an empty List if none
 	 */
 	public List<Object> getHeaderValues(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		if (header != null) {
-			return header.getValues();
-		}
-		else {
-			return Collections.emptyList();
-		}
+		return getHeaders(name).stream().map(value -> (Object) value).toList();
 	}
 
 	/**
@@ -659,17 +649,24 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	}
 
 	private void doAddHeaderValue(String name, Object value, boolean replace) {
-		HeaderValueHolder header = this.headers.get(name);
 		Assert.notNull(value, "Header value must not be null");
-		if (header == null) {
-			header = new HeaderValueHolder();
-			this.headers.put(name, header);
-		}
 		if (replace) {
-			header.setValue(value);
+			this.headers.set(name, value.toString());
 		}
 		else {
-			header.addValue(value);
+			if (value instanceof Collection<?> values) {
+				for (Object item : values) {
+					this.headers.add(name, item.toString());
+				}
+			}
+			else if (value.getClass().isArray()) {
+				for (Object item : org.springframework.util.ObjectUtils.toObjectArray(value)) {
+					this.headers.add(name, item.toString());
+				}
+			}
+			else {
+				this.headers.add(name, value.toString());
+			}
 		}
 	}
 
