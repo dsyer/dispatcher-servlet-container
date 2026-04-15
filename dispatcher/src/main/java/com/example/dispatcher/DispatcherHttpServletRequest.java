@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -48,7 +47,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
-import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
@@ -237,7 +235,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	@Nullable
 	private Cookie[] cookies;
 
-	private final Map<String, HeaderValueHolder> headers = new LinkedCaseInsensitiveMap<>();
+	private HttpHeaders headers = new HttpHeaders();
 
 	@Nullable
 	private String method;
@@ -342,6 +340,10 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		this.locales.add(Locale.ENGLISH);
 	}
 
+	public void setHeaders(MultiValueMap<String, String> headers) {
+		this.headers = new HttpHeaders(headers);
+	}
+
 	// ---------------------------------------------------------------------
 	// Lifecycle methods
 	// ---------------------------------------------------------------------
@@ -422,7 +424,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 					&& !this.contentType.toLowerCase().contains(CHARSET_PREFIX)) {
 				value += ';' + CHARSET_PREFIX + this.characterEncoding;
 			}
-			doAddHeaderValue(HttpHeaders.CONTENT_TYPE, value, true);
+			this.headers.set(HttpHeaders.CONTENT_TYPE, value);
 		}
 	}
 
@@ -817,9 +819,9 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	}
 
 	private void updateAcceptLanguageHeader() {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAcceptLanguageAsLocales(this.locales);
-		doAddHeaderValue(HttpHeaders.ACCEPT_LANGUAGE, headers.getFirst(HttpHeaders.ACCEPT_LANGUAGE), true);
+		HttpHeaders tmp = new HttpHeaders();
+		tmp.setAcceptLanguageAsLocales(this.locales);
+		this.headers.set(HttpHeaders.ACCEPT_LANGUAGE, tmp.getFirst(HttpHeaders.ACCEPT_LANGUAGE));
 	}
 
 	/**
@@ -1068,14 +1070,14 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	 * @see #getDateHeader
 	 */
 	public void addHeader(String name, Object value) {
-		if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name) && !this.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+		if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name) && !this.headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
 			setContentType(value.toString());
 		} else if (HttpHeaders.ACCEPT_LANGUAGE.equalsIgnoreCase(name)
-				&& !this.headers.containsKey(HttpHeaders.ACCEPT_LANGUAGE)) {
+				&& !this.headers.containsHeader(HttpHeaders.ACCEPT_LANGUAGE)) {
 			try {
-				HttpHeaders headers = new HttpHeaders();
-				headers.add(HttpHeaders.ACCEPT_LANGUAGE, value.toString());
-				List<Locale> locales = headers.getAcceptLanguageAsLocales();
+				HttpHeaders tmp = new HttpHeaders();
+				tmp.add(HttpHeaders.ACCEPT_LANGUAGE, value.toString());
+				List<Locale> locales = tmp.getAcceptLanguageAsLocales();
 				this.locales.clear();
 				this.locales.addAll(locales);
 				if (this.locales.isEmpty()) {
@@ -1084,25 +1086,30 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 			} catch (IllegalArgumentException ex) {
 				// Invalid Accept-Language format -> just store plain header
 			}
-			doAddHeaderValue(name, value, true);
+			this.headers.set(name, value.toString());
 		} else {
-			doAddHeaderValue(name, value, false);
+			addHeaderValue(name, value);
+		}
+	}
+
+	private void addHeaderValue(String name, Object value) {
+		if (value instanceof Collection<?> values) {
+			values.forEach(v -> this.headers.add(name, v.toString()));
+		} else if (value.getClass().isArray()) {
+			for (Object v : ObjectUtils.toObjectArray(value)) {
+				this.headers.add(name, v.toString());
+			}
+		} else {
+			this.headers.add(name, value.toString());
 		}
 	}
 
 	private void doAddHeaderValue(String name, @Nullable Object value, boolean replace) {
-		HeaderValueHolder header = this.headers.get(name);
 		Assert.notNull(value, "Header value must not be null");
-		if (header == null || replace) {
-			header = new HeaderValueHolder();
-			this.headers.put(name, header);
-		}
-		if (value instanceof Collection) {
-			header.addValues((Collection<?>) value);
-		} else if (value.getClass().isArray()) {
-			header.addValueArray(value);
+		if (replace) {
+			this.headers.set(name, value.toString());
 		} else {
-			header.addValue(value);
+			addHeaderValue(name, value);
 		}
 	}
 
@@ -1115,6 +1122,7 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 		Assert.notNull(name, "Header name must not be null");
 		this.headers.remove(name);
 	}
+
 
 	/**
 	 * Return the long timestamp for the date header with the given {@code name}.
@@ -1135,20 +1143,11 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	 */
 	@Override
 	public long getDateHeader(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		Object value = (header != null ? header.getValue() : null);
-		if (value instanceof Date) {
-			return ((Date) value).getTime();
-		} else if (value instanceof Number) {
-			return ((Number) value).longValue();
-		} else if (value instanceof String) {
-			return parseDateHeader(name, (String) value);
-		} else if (value != null) {
-			throw new IllegalArgumentException(
-					"Value for header '" + name + "' is not a Date, Number, or String: " + value);
-		} else {
+		String value = this.headers.getFirst(name);
+		if (value == null) {
 			return -1L;
 		}
+		return parseDateHeader(name, value);
 	}
 
 	private long parseDateHeader(String name, String value) {
@@ -1167,34 +1166,27 @@ public class DispatcherHttpServletRequest implements HttpServletRequest {
 	@Override
 	@Nullable
 	public String getHeader(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		return (header != null ? header.getStringValue() : null);
+		return this.headers.getFirst(name);
 	}
 
 	@Override
 	public Enumeration<String> getHeaders(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		return Collections.enumeration(header != null ? header.getStringValues() : new LinkedList<>());
+		List<String> values = this.headers.get(name);
+		return Collections.enumeration(values != null ? values : Collections.emptyList());
 	}
 
 	@Override
 	public Enumeration<String> getHeaderNames() {
-		return Collections.enumeration(this.headers.keySet());
+		return Collections.enumeration(this.headers.headerNames());
 	}
 
 	@Override
 	public int getIntHeader(String name) {
-		HeaderValueHolder header = this.headers.get(name);
-		Object value = (header != null ? header.getValue() : null);
-		if (value instanceof Number) {
-			return ((Number) value).intValue();
-		} else if (value instanceof String) {
-			return Integer.parseInt((String) value);
-		} else if (value != null) {
-			throw new NumberFormatException("Value for header '" + name + "' is not a Number: " + value);
-		} else {
+		String value = this.headers.getFirst(name);
+		if (value == null) {
 			return -1;
 		}
+		return Integer.parseInt(value);
 	}
 
 	public void setMethod(@Nullable String method) {

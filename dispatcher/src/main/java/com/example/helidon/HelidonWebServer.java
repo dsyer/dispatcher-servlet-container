@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.StreamUtils;
 
 import com.example.dispatcher.DispatcherHttpServletRequest;
@@ -33,7 +34,6 @@ import com.example.dispatcher.DispatcherHttpServletResponse;
 import com.example.dispatcher.DispatcherServletContext;
 
 import io.helidon.common.uri.UriQuery;
-import io.helidon.http.Header;
 import io.helidon.webserver.http.Handler;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
@@ -95,6 +95,7 @@ class HelidonWebServer implements WebServer {
 		@Override
 		public void handle(ServerRequest request, ServerResponse response) throws Exception {
 			DispatcherHttpServletRequest servletRequest = new DispatcherHttpServletRequest(servletContext);
+			servletRequest.setHeaders(new HelidonHeadersAdapter(request.headers()));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
 
 			servletRequest.setMethod(request.prologue().method().text());
@@ -103,12 +104,6 @@ class HelidonWebServer implements WebServer {
 			if (!query.isEmpty()) {
 				servletRequest.setQueryString(query.value());
 				servletRequest.setParameters(RequestUtils.formatParams(query));
-			}
-
-			for (Header header : request.headers()) {
-				for (String value : header.allValues()) {
-					servletRequest.addHeader(header.name(), value);
-				}
 			}
 
 			servletRequest.setContent(StreamUtils.copyToByteArray(request.content().inputStream()));
