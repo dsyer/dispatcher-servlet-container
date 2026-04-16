@@ -149,11 +149,6 @@ public class NettyWebServer implements WebServer {
 		}
 
 		@Override
-		public void channelReadComplete(ChannelHandlerContext ctx) {
-			ctx.flush();
-		}
-
-		@Override
 		public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
 			if (msg instanceof HttpRequest) {
 				HttpRequest request = this.request = (HttpRequest) msg;
@@ -201,7 +196,7 @@ public class NettyWebServer implements WebServer {
 		private void writeResponse(ChannelHandlerContext ctx) {
 			FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE,
 					Unpooled.EMPTY_BUFFER);
-			ctx.write(response);
+			ctx.writeAndFlush(response);
 		}
 
 		private void writeResponse(ChannelHandlerContext ctx, LastHttpContent trailer,
@@ -222,7 +217,7 @@ public class NettyWebServer implements WebServer {
 					httpResponse.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 				}
 			}
-			ctx.write(httpResponse);
+			ctx.writeAndFlush(httpResponse);
 
 			if (!keepAlive) {
 				ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
