@@ -23,9 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.coyote.Adapter;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
-import org.apache.coyote.http11.Http11NioProtocol;
+import org.apache.coyote.http11.Http11Nio2Protocol;
 import org.apache.tomcat.util.net.ApplicationBufferHandler;
-import org.apache.tomcat.util.net.NioEndpoint;
+import org.apache.tomcat.util.net.Nio2Endpoint;
 import org.apache.tomcat.util.net.SocketEvent;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
@@ -43,7 +43,7 @@ public class CoyoteWebServer implements WebServer {
 
 	private DispatcherServletContext servletContext = new DispatcherServletContext();
 
-	private Http11NioProtocol server;
+	private Http11Nio2Protocol server;
 
 	private int port;
 
@@ -73,9 +73,9 @@ public class CoyoteWebServer implements WebServer {
 	@Override
 	public void start() throws WebServerException {
 		try {
-			NioEndpoint endpoint = new NioEndpoint();
+			Nio2Endpoint endpoint = new Nio2Endpoint();
 			endpoint.setUseVirtualThreads(true);
-			this.server = new Http11NioProtocol(endpoint);
+			this.server = new Http11Nio2Protocol(endpoint);
 			this.server.setPort(getPort());
 			this.server.setAdapter(new MyServerHandler(this.servletContext));
 			this.server.init();
