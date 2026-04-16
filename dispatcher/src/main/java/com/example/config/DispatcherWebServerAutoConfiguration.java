@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.example.coyote.CoyoteWebServerFactory;
 import com.example.helidon.HelidonWebServerFactory;
+import com.example.jetty.JettyWebServerFactory;
 import com.example.netty.NettyWebServerFactory;
 import com.example.reactor.ReactorWebServerFactory;
 import com.example.standard.DispatcherWebServerFactory;
@@ -57,6 +58,14 @@ public class DispatcherWebServerAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingClass("reactor.netty.http.server.HttpServer")
+	@ConditionalOnClass(name = "org.eclipse.jetty.server.Server")
+	public ConfigurableServletWebServerFactory jettyWebServerFactory(ServerProperties server) {
+		logger.info("Creating JettyWebServerFactory");
+		return new JettyWebServerFactory(server);
+	}
+
+	@Bean
+	@ConditionalOnMissingClass({ "reactor.netty.http.server.HttpServer", "org.eclipse.jetty.server.Server" })
 	@ConditionalOnClass(name = "io.helidon.webserver.WebServer")
 	public ConfigurableServletWebServerFactory helidonWebServerFactory(ServerProperties server) {
 		logger.info("Creating HelidonWebServerFactory");
@@ -64,7 +73,8 @@ public class DispatcherWebServerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingClass({ "reactor.netty.http.server.HttpServer", "io.helidon.webserver.WebServer" })
+	@ConditionalOnMissingClass({ "reactor.netty.http.server.HttpServer", "org.eclipse.jetty.server.Server",
+			"io.helidon.webserver.WebServer" })
 	@ConditionalOnClass(name = "io.netty.bootstrap.ServerBootstrap")
 	public ConfigurableServletWebServerFactory nettyWebServerFactory(ServerProperties server) {
 		logger.info("Creating NettyWebServerFactory");
@@ -73,7 +83,7 @@ public class DispatcherWebServerAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingClass({ "io.netty.bootstrap.ServerBootstrap", "org.apache.coyote.Request",
-			"io.helidon.webserver.WebServer" })
+			"org.eclipse.jetty.server.Server", "io.helidon.webserver.WebServer" })
 	public ConfigurableServletWebServerFactory defaultWebServerFactory(ServerProperties server) {
 		logger.info("Creating DispatcherWebServerFactory");
 		return new DispatcherWebServerFactory(server);
