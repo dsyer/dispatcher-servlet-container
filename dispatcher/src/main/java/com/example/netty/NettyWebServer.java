@@ -16,6 +16,7 @@
 package com.example.netty;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,12 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.IoHandlerFactory;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
@@ -71,6 +74,8 @@ public class NettyWebServer implements WebServer {
 
 	private ChannelFuture server = null;
 
+	private EventLoopGroup group = null;
+
 	private int port;
 
 	public NettyWebServer(int port, ServletContextInitializer[] initializers) {
@@ -86,20 +91,26 @@ public class NettyWebServer implements WebServer {
 
 	@Override
 	public void stop() throws WebServerException {
-		if (server == null) {
-			return;
+		if (this.server != null) {
+			this.server.cancel(true);
+			this.server = null;
 		}
-		server.cancel(true);
+		if (this.group != null) {
+			this.group.shutdownGracefully();
+			this.group = null;
+		}
 	}
 
 	@Override
 	public void start() throws WebServerException {
-		EventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+		Transport transport = Transport.detect();
+		this.group = new MultiThreadIoEventLoopGroup(transport.ioHandlerFactory());
 		try {
+			logger.info("Using Netty transport: " + transport.name());
 			ServerBootstrap b = new ServerBootstrap();
 			b.option(ChannelOption.SO_BACKLOG, 1024);
-			b.group(group)
-					.channel(NioServerSocketChannel.class)
+			b.group(this.group)
+					.channel(transport.serverChannelClass())
 					.childHandler(new MyServerInitializer(this.servletContext));
 
 			this.server = b.bind(this.port).sync();
@@ -107,8 +118,17 @@ public class NettyWebServer implements WebServer {
 			logger.info("Server started on port: " + getPort());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			group.shutdownGracefully();
+			if (this.group != null) {
+				this.group.shutdownGracefully();
+				this.group = null;
+			}
 			throw new WebServerException("Cannot start server", e);
+		} catch (RuntimeException e) {
+			if (this.group != null) {
+				this.group.shutdownGracefully();
+				this.group = null;
+			}
+			throw e;
 		} finally {
 		}
 	}
@@ -225,6 +245,51 @@ public class NettyWebServer implements WebServer {
 	@Override
 	public int getPort() {
 		return server == null ? this.port : ((InetSocketAddress) server.channel().localAddress()).getPort();
+	}
+
+}
+
+record Transport(String name, IoHandlerFactory ioHandlerFactory, Class<? extends ServerChannel> serverChannelClass) {
+
+	static Transport detect() {
+		Transport epoll = tryNative("epoll", "io.netty.channel.epoll.Epoll", "io.netty.channel.epoll.EpollIoHandler",
+				"io.netty.channel.epoll.EpollServerSocketChannel");
+		if (epoll != null) {
+			return epoll;
+		}
+
+		Transport kqueue = tryNative("kqueue", "io.netty.channel.kqueue.KQueue",
+				"io.netty.channel.kqueue.KQueueIoHandler", "io.netty.channel.kqueue.KQueueServerSocketChannel");
+		if (kqueue != null) {
+			return kqueue;
+		}
+
+		return new Transport("nio", NioIoHandler.newFactory(), NioServerSocketChannel.class);
+	}
+
+	private static Transport tryNative(String name, String detectorClassName, String ioHandlerClassName,
+			String channelClassName) {
+		try {
+			ClassLoader classLoader = NettyWebServer.class.getClassLoader();
+			Class<?> detectorClass = Class.forName(detectorClassName, false, classLoader);
+			Method isAvailable = detectorClass.getMethod("isAvailable");
+			Object available = isAvailable.invoke(null);
+			if (!Boolean.TRUE.equals(available)) {
+				return null;
+			}
+
+			Class<?> ioHandlerClass = Class.forName(ioHandlerClassName, false, classLoader);
+			Method newFactory = ioHandlerClass.getMethod("newFactory");
+			IoHandlerFactory ioHandlerFactory = (IoHandlerFactory) newFactory.invoke(null);
+
+			@SuppressWarnings("unchecked")
+			Class<? extends ServerChannel> channelClass = (Class<? extends ServerChannel>) Class
+					.forName(channelClassName, false, classLoader);
+
+			return new Transport(name, ioHandlerFactory, channelClass);
+		} catch (Throwable ex) {
+			return null;
+		}
 	}
 
 }
