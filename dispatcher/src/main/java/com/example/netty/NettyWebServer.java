@@ -37,6 +37,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.IoHandlerFactory;
 import io.netty.channel.ChannelOption;
@@ -145,12 +146,11 @@ public class NettyWebServer implements WebServer {
 		public void initChannel(SocketChannel ch) {
 			ChannelPipeline p = ch.pipeline();
 			p.addLast(new HttpServerCodec());
-			p.addLast(new HttpServerExpectContinueHandler());
 			p.addLast(new MyServerHandler(this.servletContext));
 		}
 	}
 
-	static class MyServerHandler extends SimpleChannelInboundHandler<HttpObject> {
+	static class MyServerHandler extends ChannelInboundHandlerAdapter {
 
 		private HttpRequest request;
 		private io.netty.handler.codec.http.HttpHeaders responseHeaders = new DefaultHttpHeaders();
@@ -166,7 +166,7 @@ public class NettyWebServer implements WebServer {
 		}
 
 		@Override
-		public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
+		public void channelRead(ChannelHandlerContext ctx, Object msg) {
 			if (msg instanceof HttpRequest) {
 				HttpRequest request = this.request = (HttpRequest) msg;
 				this.servletRequest.setHeaders(new NettyHeadersAdapter(request.headers()));
@@ -182,6 +182,7 @@ public class NettyWebServer implements WebServer {
 			if (msg instanceof HttpContent) {
 				HttpContent httpContent = (HttpContent) msg;
 				this.servletRequest.setContent(RequestUtils.formatBody(httpContent));
+				httpContent.content().release();
 
 				if (msg instanceof LastHttpContent) {
 					LastHttpContent trailer = (LastHttpContent) msg;

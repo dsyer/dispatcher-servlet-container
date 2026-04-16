@@ -38,14 +38,12 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>io.helidon.webserver</groupId>
-			<artifactId>helidon-webserver</artifactId>
-			<version>4.2.2</version>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-codec-http</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.helidon.logging</groupId>
-			<artifactId>helidon-logging-slf4j</artifactId>
-			<version>4.2.2</version>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport-native-epoll</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
