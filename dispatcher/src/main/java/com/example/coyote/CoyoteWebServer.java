@@ -25,6 +25,7 @@ import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.net.ApplicationBufferHandler;
+import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SocketEvent;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
@@ -72,7 +73,9 @@ public class CoyoteWebServer implements WebServer {
 	@Override
 	public void start() throws WebServerException {
 		try {
-			this.server = new Http11NioProtocol();
+			NioEndpoint endpoint = new NioEndpoint();
+			endpoint.setUseVirtualThreads(true);
+			this.server = new Http11NioProtocol(endpoint);
 			this.server.setPort(getPort());
 			this.server.setAdapter(new MyServerHandler(this.servletContext));
 			this.server.init();
