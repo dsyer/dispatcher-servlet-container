@@ -21,6 +21,7 @@
 		<module>reactor-dispatcher</module>
 		<module>coyote-dispatcher</module>
 		<module>helidon-dispatcher</module>
+		<module>jetty-dispatcher</module>
 		<module>spring-fruits</module>
 	</modules>
 
