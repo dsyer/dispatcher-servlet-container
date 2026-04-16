@@ -15,12 +15,14 @@
  */
 package com.example.jetty;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
+import org.eclipse.jetty.http.HttpHeader;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.server.Handler;
@@ -43,6 +45,8 @@ import jakarta.servlet.ServletException;
 class JettyWebServer implements WebServer {
 
     static Log logger = LogFactory.getLog(JettyWebServer.class);
+
+    private static final byte[] EMPTY_BODY = new byte[0];
 
     private final DispatcherServletContext servletContext = new DispatcherServletContext();
 
@@ -118,18 +122,32 @@ class JettyWebServer implements WebServer {
                 servletRequest.setQueryString(request.getHttpURI().getQuery());
                 servletRequest.setParameters(RequestUtils.formatParams(request));
             }
-            servletRequest.setContent(StreamUtils.copyToByteArray(Request.asInputStream(request)));
+            servletRequest.setContent(readBody(request));
 
             transfer(servletRequest, servletResponse);
 
             response.setStatus(servletResponse.getStatus());
             byte[] body = servletResponse.getContentAsByteArray();
             HttpFields.Mutable headers = response.getHeaders();
-            if (!headers.contains(org.springframework.http.HttpHeaders.CONTENT_LENGTH)) {
-                headers.put(org.springframework.http.HttpHeaders.CONTENT_LENGTH, String.valueOf(body.length));
+            if (!headers.contains(HttpHeader.CONTENT_LENGTH)) {
+                headers.put(HttpHeader.CONTENT_LENGTH, body.length);
             }
             response.write(true, ByteBuffer.wrap(body), callback);
             return true;
+        }
+
+        private byte[] readBody(Request request) throws IOException {
+            long contentLength = request.getHeaders().getLongField(HttpHeader.CONTENT_LENGTH);
+            boolean transferEncoding = request.getHeaders().contains(HttpHeader.TRANSFER_ENCODING);
+            if (contentLength == 0 && !transferEncoding) {
+                return EMPTY_BODY;
+            }
+            if (contentLength > 0 && contentLength <= Integer.MAX_VALUE) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream((int) contentLength);
+                StreamUtils.copy(Request.asInputStream(request), outputStream);
+                return outputStream.toByteArray();
+            }
+            return StreamUtils.copyToByteArray(Request.asInputStream(request));
         }
 
         private void transfer(DispatcherHttpServletRequest servletRequest,
