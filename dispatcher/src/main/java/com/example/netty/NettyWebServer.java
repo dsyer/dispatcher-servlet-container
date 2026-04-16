@@ -45,12 +45,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.compression.CompressionOptions;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpObject;
@@ -127,7 +125,6 @@ public class NettyWebServer implements WebServer {
 		public void initChannel(SocketChannel ch) {
 			ChannelPipeline p = ch.pipeline();
 			p.addLast(new HttpServerCodec());
-			p.addLast(new HttpContentCompressor((CompressionOptions[]) null));
 			p.addLast(new HttpServerExpectContinueHandler());
 			p.addLast(new MyServerHandler(this.servletContext));
 		}
