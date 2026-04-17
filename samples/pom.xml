@@ -23,6 +23,9 @@
 		<module>helidon-dispatcher</module>
 		<module>jetty-dispatcher</module>
 		<module>spring-fruits</module>
+		<module>netty-fruits</module>
+		<module>reactor-fruits</module>
+		<module>helidon-fruits</module>
 	</modules>
 
 	<properties>
