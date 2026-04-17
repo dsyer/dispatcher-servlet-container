@@ -105,7 +105,8 @@ public class NettyWebServer implements WebServer {
 	@Override
 	public void start() throws WebServerException {
 		Transport transport = Transport.detect();
-		this.group = new MultiThreadIoEventLoopGroup(transport.ioHandlerFactory());
+		this.group = new MultithreadVirtualEventExecutorGroup(Runtime.getRuntime().availableProcessors(),
+				transport.ioHandlerFactory());
 		try {
 			logger.info("Using Netty transport: " + transport.name());
 			ServerBootstrap b = new ServerBootstrap();
