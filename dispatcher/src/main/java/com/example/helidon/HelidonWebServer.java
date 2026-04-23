@@ -96,6 +96,7 @@ class HelidonWebServer implements WebServer {
 			servletRequest.setHeaders(new HelidonHeadersAdapter(request.headers()));
 			DispatcherHttpServletResponse servletResponse = new DispatcherHttpServletResponse();
 			servletResponse.setHeaders(new HelidonHeadersAdapter(response.headers()));
+			servletResponse.setOutputStream(response.outputStream());
 			servletRequest.setMethod(request.prologue().method().text());
 			servletRequest.setRequestURI(request.requestedUri().path().path());
 			UriQuery query = request.query();
@@ -110,9 +111,7 @@ class HelidonWebServer implements WebServer {
 
 			response.status(servletResponse.getStatus());
 
-			byte[] body = servletResponse.getContentAsByteArray();
-			response.contentLength(body.length);
-			response.send(body);
+			response.streamResult("Done");
 		}
 
 		private void transfer(DispatcherHttpServletRequest servletRequest,

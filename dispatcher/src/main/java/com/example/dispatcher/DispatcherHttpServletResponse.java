@@ -86,7 +86,7 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	private final ByteArrayOutputStream content = new ByteArrayOutputStream(8192);
 
-	private final ServletOutputStream outputStream = new ResponseServletOutputStream(this.content);
+	private ServletOutputStream outputStream = new ResponseServletOutputStream(this.content);
 
 	@Nullable
 	private PrintWriter writer;
@@ -122,6 +122,11 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 
 	public void setHeaders(MultiValueMap<String, String> headers) {
 		this.headers = new HttpHeaders(headers);
+	}
+
+	public void setOutputStream(OutputStream outputStream) {
+		this.writerAccessAllowed = false;
+		this.outputStream = new ResponseServletOutputStream(outputStream);
 	}
 
 	// ---------------------------------------------------------------------
@@ -212,6 +217,9 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	}
 
 	public byte[] getContentAsByteArray() {
+		if (!this.writerAccessAllowed) {
+			throw new IllegalStateException("Byte content not available");
+		}
 		return this.content.toByteArray();
 	}
 
@@ -225,6 +233,9 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 * @see #getContentAsString(Charset)
 	 */
 	public String getContentAsString() throws UnsupportedEncodingException {
+		if (!this.writerAccessAllowed) {
+			throw new IllegalStateException("Byte content not available");
+		}
 		return (this.characterEncoding != null ? this.content.toString(this.characterEncoding)
 				: this.content.toString());
 	}
@@ -241,6 +252,9 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	 * @see #getContentAsString()
 	 */
 	public String getContentAsString(Charset fallbackCharset) throws UnsupportedEncodingException {
+		if (!this.writerAccessAllowed) {
+			throw new IllegalStateException("Byte content not available");
+		}
 		return (isCharset() && this.characterEncoding != null ? this.content.toString(this.characterEncoding)
 				: this.content.toString(fallbackCharset.name()));
 	}
@@ -312,6 +326,9 @@ public class DispatcherHttpServletResponse implements HttpServletResponse {
 	@Override
 	public void resetBuffer() {
 		Assert.state(!isCommitted(), "Cannot reset buffer - response is already committed");
+		if (!this.writerAccessAllowed) {
+			throw new IllegalStateException("Byte content not available");
+		}
 		this.content.reset();
 	}
 
